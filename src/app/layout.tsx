@@ -14,8 +14,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Luxe Roam",
-  description: "Luxury tours and travel, Kenya-based",
+  title: {
+    default: "Luxe Roam | Luxury Safaris & Curated Travel",
+    template: "%s | Luxe Roam",
+  },
+  description:
+    "Curated honeymoon and family travel across Kenya, East Africa, Europe, the USA, Asia, and Australia.",
 };
 
 export default function RootLayout({
