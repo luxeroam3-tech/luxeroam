@@ -5,6 +5,12 @@ import Image from "next/image";
 import { Menu, Globe } from "lucide-react";
 import { SearchBar } from "@/components/search-bar";
 import { CompactPill } from "@/components/compact-pill";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 const NAV_ITEMS = [
   { label: "Tours", icon: "/icons/tours.png" },
@@ -12,8 +18,14 @@ const NAV_ITEMS = [
   { label: "Stays", icon: "/icons/stays.png" },
 ];
 
+const MENU_LINKS = [
+  { label: "About", href: "#" },
+  { label: "Contact", href: "#" },
+];
+
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     function onScroll() {
@@ -28,18 +40,13 @@ export function Header() {
       <div
         className={`flex items-center justify-between transition-all ${scrolled ? "py-3" : "py-4"}`}
       >
-        <span className="flex items-center gap-2">
-          <Image
-            src="/logo/logo.png"
-            alt="Luxe Roam"
-            width={32}
-            height={32}
-            className="size-8 object-contain"
-          />
-          <span className="text-xl font-semibold tracking-tight">
-            Luxe Roam
-          </span>
-        </span>
+        <Image
+          src="/logo/logo.png"
+          alt="Luxe Roam"
+          width={48}
+          height={48}
+          className="size-12 object-contain"
+        />
 
         {scrolled ? (
           <CompactPill />
@@ -69,16 +76,13 @@ export function Header() {
         )}
 
         <div className="flex items-center gap-3">
-          <a
-            href="#"
-            className="hidden text-sm font-medium hover:underline sm:inline"
-          >
-            List your tour
-          </a>
           <button className="flex size-9 items-center justify-center rounded-full hover:bg-muted">
             <Globe className="size-4" />
           </button>
-          <button className="flex size-9 items-center justify-center rounded-full border border-border hover:shadow-sm">
+          <button
+            onClick={() => setMenuOpen(true)}
+            className="flex size-9 items-center justify-center rounded-full border border-border hover:shadow-sm"
+          >
             <Menu className="size-4" />
           </button>
         </div>
@@ -89,6 +93,26 @@ export function Header() {
           <SearchBar />
         </div>
       )}
+
+      <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+        <SheetContent side="right" className="w-72">
+          <SheetHeader>
+            <SheetTitle>Menu</SheetTitle>
+          </SheetHeader>
+          <nav className="flex flex-col px-4">
+            {MENU_LINKS.map(({ label, href }) => (
+              <a
+                key={label}
+                href={href}
+                onClick={() => setMenuOpen(false)}
+                className="rounded-lg px-2 py-3 text-sm font-medium hover:bg-muted"
+              >
+                {label}
+              </a>
+            ))}
+          </nav>
+        </SheetContent>
+      </Sheet>
     </header>
   );
 }
