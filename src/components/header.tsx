@@ -1,6 +1,10 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Menu, Globe } from "lucide-react";
 import { SearchBar } from "@/components/search-bar";
+import { CompactPill } from "@/components/compact-pill";
 
 const NAV_ITEMS = [
   { label: "Tours", icon: "/icons/tours.png" },
@@ -9,29 +13,60 @@ const NAV_ITEMS = [
 ];
 
 export function Header() {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    function onScroll() {
+      setScrolled(window.scrollY > 60);
+    }
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
-    <header className="sticky top-0 z-40 flex flex-col gap-4 border-b border-border bg-white px-6 py-4">
-      <div className="flex items-center justify-between">
-        <span className="text-xl font-semibold tracking-tight">
-          Luxe Roam
+    <header className="sticky top-0 z-40 flex flex-col border-b border-border bg-white px-6 transition-all">
+      <div
+        className={`flex items-center justify-between transition-all ${scrolled ? "py-3" : "py-4"}`}
+      >
+        <span className="flex items-center gap-2">
+          <Image
+            src="/logo/logo.png"
+            alt="Luxe Roam"
+            width={32}
+            height={32}
+            className="size-8 object-contain"
+          />
+          <span className="text-xl font-semibold tracking-tight">
+            Luxe Roam
+          </span>
         </span>
 
-        <nav className="hidden items-center gap-8 sm:flex">
-          {NAV_ITEMS.map(({ label, icon }, i) => (
-            <a
-              key={label}
-              href="#"
-              className={`flex flex-col items-center gap-1 border-b-2 pb-2 pt-1 text-sm font-medium transition-colors ${
-                i === 0
-                  ? "border-foreground text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Image src={icon} alt="" width={44} height={44} className="size-11 object-contain" />
-              {label}
-            </a>
-          ))}
-        </nav>
+        {scrolled ? (
+          <CompactPill />
+        ) : (
+          <nav className="hidden items-center gap-8 sm:flex">
+            {NAV_ITEMS.map(({ label, icon }, i) => (
+              <a
+                key={label}
+                href="#"
+                className={`flex flex-col items-center gap-1 border-b-2 pb-2 pt-1 text-sm font-medium transition-colors ${
+                  i === 0
+                    ? "border-foreground text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Image
+                  src={icon}
+                  alt=""
+                  width={44}
+                  height={44}
+                  className="size-11 object-contain"
+                />
+                {label}
+              </a>
+            ))}
+          </nav>
+        )}
 
         <div className="flex items-center gap-3">
           <a
@@ -49,9 +84,11 @@ export function Header() {
         </div>
       </div>
 
-      <div className="flex justify-center">
-        <SearchBar />
-      </div>
+      {!scrolled && (
+        <div className="flex justify-center pb-4">
+          <SearchBar />
+        </div>
+      )}
     </header>
   );
 }

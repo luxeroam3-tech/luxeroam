@@ -1,13 +1,13 @@
 import { Header } from "@/components/header";
-import { DestinationRow } from "@/components/destination-row";
+import { FeaturedDestinations } from "@/components/featured-destinations";
+import { BentoGrid } from "@/components/bento-grid";
 
 export default function Home() {
   return (
     <main className="flex flex-1 flex-col">
       <Header />
-      <DestinationRow title="Popular in Maasai Mara" />
-      <DestinationRow title="Available next month in Diani Beach" />
-      <DestinationRow title="Trending near Amboseli" />
+      <FeaturedDestinations />
+      <BentoGrid />
     </main>
   );
 }
