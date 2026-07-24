@@ -62,16 +62,17 @@ export function Header({ destinations, packageTypes }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-40 flex flex-col border-b border-border bg-white px-6">
-      <div className="flex min-h-20 items-center justify-between py-3">
+      <div className="grid min-h-20 grid-cols-[1fr_auto_1fr] items-center gap-4 py-3">
         <Image
           src="/logo/logo.png"
           alt="Luxe Roam"
-          width={72}
-          height={72}
-          className="size-16 object-contain"
+          width={1137}
+          height={352}
+          priority
+          className="h-8 w-auto justify-self-start object-contain sm:h-11"
         />
 
-        <div className="relative">
+        <div className="relative justify-self-center">
           <div
             className={`transition-opacity duration-200 ${scrolled ? "pointer-events-none absolute inset-0 opacity-0" : "opacity-100"}`}
           >
@@ -103,13 +104,13 @@ export function Header({ destinations, packageTypes }: HeaderProps) {
             </nav>
           </div>
           <div
-            className={`transition-opacity duration-200 ${scrolled ? "opacity-100" : "pointer-events-none absolute inset-0 opacity-0"}`}
+            className={`hidden transition-opacity duration-200 sm:block ${scrolled ? "opacity-100" : "pointer-events-none absolute inset-0 opacity-0"}`}
           >
             <CompactPill destinations={destinations} packageTypes={packageTypes} />
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 justify-self-end">
           <button
             onClick={() => setPickerOpen(true)}
             className="flex size-9 items-center justify-center rounded-full hover:bg-muted"
@@ -126,11 +127,12 @@ export function Header({ destinations, packageTypes }: HeaderProps) {
       </div>
 
       <div
-        className="grid transition-[grid-template-rows] duration-300 ease-in-out"
-        style={{ gridTemplateRows: scrolled ? "0fr" : "1fr" }}
+        className={`grid grid-rows-[1fr] transition-[grid-template-rows] duration-300 ease-in-out ${
+          scrolled ? "sm:grid-rows-[0fr]" : "sm:grid-rows-[1fr]"
+        }`}
       >
-        <div className="flex justify-center overflow-hidden">
-          <div className="w-full pb-4">
+        <div className="overflow-hidden">
+          <div className="flex justify-center pb-4">
             <SearchBar destinations={destinations} packageTypes={packageTypes} />
           </div>
         </div>
