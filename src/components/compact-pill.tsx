@@ -2,13 +2,21 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, MapPin } from "lucide-react";
-import { DESTINATIONS, TRIP_TYPES } from "@/components/search-bar";
+import { Search, MapPin, Heart } from "lucide-react";
+import { TRIP_TYPE_META } from "@/components/search-bar";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n/context";
+import type { DestinationSummary } from "@/lib/data";
 
-type Panel = "destinations" | "experiences" | null;
+type Panel = "destinations" | "type" | null;
 
-export function CompactPill() {
+type CompactPillProps = {
+  destinations: DestinationSummary[];
+  packageTypes: string[];
+};
+
+export function CompactPill({ destinations, packageTypes }: CompactPillProps) {
+  const { t } = useI18n();
   const [panel, setPanel] = useState<Panel>(null);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -35,20 +43,18 @@ export function CompactPill() {
             panel === "destinations" && "bg-muted"
           )}
         >
-          Destinations
+          {t("search.destinations")}
         </button>
         <div className="h-5 w-px bg-border" />
         <button
           type="button"
-          onClick={() =>
-            setPanel(panel === "experiences" ? null : "experiences")
-          }
+          onClick={() => setPanel(panel === "type" ? null : "type")}
           className={cn(
             "rounded-full px-4 py-2 text-sm font-medium transition-colors hover:bg-muted",
-            panel === "experiences" && "bg-muted"
+            panel === "type" && "bg-muted"
           )}
         >
-          Experiences
+          {t("search.tripType")}
         </button>
         <div className="pr-1">
           <button
@@ -71,33 +77,38 @@ export function CompactPill() {
           >
             {panel === "destinations" && (
               <div className="flex flex-col">
-                {DESTINATIONS.map((d) => (
+                {destinations.map((d) => (
                   <button
-                    key={d}
+                    key={d.slug}
                     type="button"
                     onClick={() => setPanel(null)}
                     className="flex items-center gap-3 rounded-lg p-2.5 text-left text-sm hover:bg-muted"
                   >
                     <MapPin className="size-4 text-muted-foreground" />
-                    {d}
+                    {d.region}
                   </button>
                 ))}
               </div>
             )}
 
-            {panel === "experiences" && (
+            {panel === "type" && (
               <div className="grid grid-cols-2 gap-2">
-                {TRIP_TYPES.map(({ label, icon: Icon }) => (
-                  <button
-                    key={label}
-                    type="button"
-                    onClick={() => setPanel(null)}
-                    className="flex items-center gap-2 rounded-full border border-border px-3 py-2 text-sm hover:bg-muted"
-                  >
-                    <Icon className="size-4" />
-                    {label}
-                  </button>
-                ))}
+                {packageTypes.map((type) => {
+                  const meta = TRIP_TYPE_META[type];
+                  const Icon = meta?.icon ?? Heart;
+                  const label = t(`nav.${type}`) || meta?.label || type;
+                  return (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setPanel(null)}
+                      className="flex items-center gap-2 rounded-full border border-border px-3 py-2 text-sm hover:bg-muted"
+                    >
+                      <Icon className="size-4" />
+                      {label}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </motion.div>

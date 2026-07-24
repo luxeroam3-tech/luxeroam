@@ -9,14 +9,8 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
-  Compass,
-  Waves,
   Heart,
   Users,
-  Mountain,
-  Tent,
-  Binoculars,
-  Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -25,30 +19,24 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { useI18n } from "@/lib/i18n/context";
+import type { DestinationSummary } from "@/lib/data";
 
 type Panel = "where" | "when" | "type" | null;
 
-export const DESTINATIONS = [
-  "Maasai Mara",
-  "Diani Beach",
-  "Amboseli",
-  "Nairobi",
-  "Watamu",
-  "Lake Naivasha",
-  "Nakuru",
-  "Laikipia",
-];
+export const TRIP_TYPE_META: Record<string, { label: string; icon: typeof Heart }> = {
+  honeymoon: { label: "Honeymoon", icon: Heart },
+  family: { label: "Family", icon: Users },
+};
 
-export const TRIP_TYPES = [
-  { label: "Safari", icon: Binoculars },
-  { label: "Beach", icon: Waves },
-  { label: "Honeymoon", icon: Heart },
-  { label: "Family", icon: Users },
-  { label: "Adventure", icon: Compass },
-  { label: "Mountain trek", icon: Mountain },
-  { label: "Glamping", icon: Tent },
-  { label: "City tour", icon: Building2 },
-];
+export function tripTypeLabel(type: string) {
+  return TRIP_TYPE_META[type]?.label ?? type;
+}
+
+type SearchBarProps = {
+  destinations: DestinationSummary[];
+  packageTypes: string[];
+};
 
 function formatDate(d: Date) {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -63,7 +51,8 @@ function buildMonthGrid(year: number, month: number) {
   return cells;
 }
 
-export function SearchBar() {
+export function SearchBar({ destinations, packageTypes }: SearchBarProps) {
+  const { t } = useI18n();
   const [panel, setPanel] = useState<Panel>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [destination, setDestination] = useState("");
@@ -127,26 +116,27 @@ export function SearchBar() {
             <MapPin className="size-4" />
           </span>
           <span>
-            <div className="text-sm font-medium">Nearby</div>
+            <div className="text-sm font-medium">{t("search.nearby")}</div>
             <div className="text-xs text-muted-foreground">
-              Find what&apos;s around you
+              {t("search.findWhatsAroundYou")}
             </div>
           </span>
         </button>
         <div className="mt-1 px-3 text-xs font-medium text-muted-foreground">
-          Popular destinations
+          {t("search.destinations")}
         </div>
-        {DESTINATIONS.map((d) => (
+        {destinations.map((d) => (
           <button
-            key={d}
+            key={d.slug}
             type="button"
             onClick={() => {
-              setDestination(d);
+              setDestination(d.region);
               setPanel(null);
             }}
-            className="rounded-lg p-3 text-left text-sm hover:bg-muted"
+            className="rounded-lg p-3 text-left hover:bg-muted"
           >
-            {d}
+            <div className="text-sm font-medium">{d.region}</div>
+            <div className="text-xs text-muted-foreground">{d.tagline}</div>
           </button>
         ))}
       </div>
@@ -158,8 +148,8 @@ export function SearchBar() {
       <div>
         <div className="mb-3 flex gap-2">
           {[
-            { label: "Today", d: today },
-            { label: "Tomorrow", d: tomorrow },
+            { label: t("search.today"), d: today },
+            { label: t("search.tomorrow"), d: tomorrow },
           ].map(({ label, d }) => (
             <button
               key={label}
@@ -234,23 +224,28 @@ export function SearchBar() {
   function TypePanel() {
     return (
       <div className="grid grid-cols-2 gap-2">
-        {TRIP_TYPES.map(({ label, icon: Icon }) => (
-          <button
-            key={label}
-            type="button"
-            onClick={() => {
-              setTripType(label);
-              setPanel(null);
-            }}
-            className={cn(
-              "flex items-center gap-2 rounded-full border border-border px-4 py-2.5 text-sm hover:bg-muted",
-              tripType === label && "border-foreground bg-muted"
-            )}
-          >
-            <Icon className="size-4" />
-            {label}
-          </button>
-        ))}
+        {packageTypes.map((type) => {
+          const meta = TRIP_TYPE_META[type];
+          const Icon = meta?.icon ?? Heart;
+          const label = t(`nav.${type}`) || meta?.label || type;
+          return (
+            <button
+              key={type}
+              type="button"
+              onClick={() => {
+                setTripType(label);
+                setPanel(null);
+              }}
+              className={cn(
+                "flex items-center gap-2 rounded-full border border-border px-4 py-2.5 text-sm hover:bg-muted",
+                tripType === label && "border-foreground bg-muted"
+              )}
+            >
+              <Icon className="size-4" />
+              {label}
+            </button>
+          );
+        })}
       </div>
     );
   }
@@ -272,10 +267,10 @@ export function SearchBar() {
             )}
           >
             <div className="text-xs font-semibold text-foreground">
-              Where
+              {t("search.where")}
             </div>
             <div className="truncate text-sm text-muted-foreground">
-              {destination || "Search destinations"}
+              {destination || t("search.searchDestinations")}
             </div>
           </button>
 
@@ -289,9 +284,11 @@ export function SearchBar() {
               panel === "when" && "bg-muted ring-1 ring-foreground/10"
             )}
           >
-            <div className="text-xs font-semibold text-foreground">When</div>
+            <div className="text-xs font-semibold text-foreground">
+              {t("search.when")}
+            </div>
             <div className="truncate text-sm text-muted-foreground">
-              {date ? formatDate(date) : "Add dates"}
+              {date ? formatDate(date) : t("search.addDates")}
             </div>
           </button>
 
@@ -306,10 +303,10 @@ export function SearchBar() {
             )}
           >
             <div className="text-xs font-semibold text-foreground">
-              Trip type
+              {t("search.tripType")}
             </div>
             <div className="truncate text-sm text-muted-foreground">
-              {tripType || "Any"}
+              {tripType || t("search.any")}
             </div>
           </button>
 
@@ -319,7 +316,7 @@ export function SearchBar() {
               className="flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/80"
             >
               <Search className="size-4" />
-              Search
+              {t("search.search")}
             </button>
           </div>
         </div>
@@ -364,7 +361,7 @@ export function SearchBar() {
         >
           <Search className="size-4 shrink-0 text-foreground" />
           <span className="flex-1 truncate text-sm font-medium">
-            {destination || "Where to?"}
+            {destination || t("search.whereTo")}
           </span>
           {(date || tripType) && (
             <span className="truncate text-xs text-muted-foreground">
@@ -378,12 +375,12 @@ export function SearchBar() {
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetContent side="bottom" className="h-[85vh] rounded-t-2xl">
             <SheetHeader>
-              <SheetTitle>Search</SheetTitle>
+              <SheetTitle>{t("search.search")}</SheetTitle>
             </SheetHeader>
             <div className="flex flex-1 flex-col gap-2 overflow-y-auto px-4 pb-4">
               <MobileAccordion
-                label="Where"
-                value={destination || "Search destinations"}
+                label={t("search.where")}
+                value={destination || t("search.searchDestinations")}
                 open={panel === "where"}
                 onToggle={() =>
                   setPanel(panel === "where" ? null : "where")
@@ -393,8 +390,8 @@ export function SearchBar() {
               </MobileAccordion>
 
               <MobileAccordion
-                label="When"
-                value={date ? formatDate(date) : "Add dates"}
+                label={t("search.when")}
+                value={date ? formatDate(date) : t("search.addDates")}
                 open={panel === "when"}
                 onToggle={() => setPanel(panel === "when" ? null : "when")}
               >
@@ -402,8 +399,8 @@ export function SearchBar() {
               </MobileAccordion>
 
               <MobileAccordion
-                label="Trip type"
-                value={tripType || "Any"}
+                label={t("search.tripType")}
+                value={tripType || t("search.any")}
                 open={panel === "type"}
                 onToggle={() => setPanel(panel === "type" ? null : "type")}
               >
@@ -417,7 +414,7 @@ export function SearchBar() {
                 className="flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/80"
               >
                 <Search className="size-4" />
-                Search
+                {t("search.search")}
               </button>
             </div>
           </SheetContent>

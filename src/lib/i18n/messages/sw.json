@@ -1,0 +1,32 @@
+{
+  "nav": {
+    "honeymoon": "Fungate",
+    "family": "Familia"
+  },
+  "search": {
+    "where": "Wapi",
+    "when": "Lini",
+    "tripType": "Aina ya safari",
+    "any": "Yoyote",
+    "searchDestinations": "Tafuta maeneo",
+    "addDates": "Ongeza tarehe",
+    "whereTo": "Unaenda wapi?",
+    "search": "Tafuta",
+    "nearby": "Karibu",
+    "findWhatsAroundYou": "Gundua yaliyo karibu nawe",
+    "destinations": "Maeneo",
+    "today": "Leo",
+    "tomorrow": "Kesho"
+  },
+  "menu": {
+    "menu": "Menyu",
+    "about": "Kuhusu",
+    "contact": "Wasiliana"
+  },
+  "picker": {
+    "languageAndRegion": "Lugha na eneo",
+    "currency": "Sarafu",
+    "chooseLanguage": "Chagua lugha",
+    "chooseCurrency": "Chagua sarafu"
+  }
+}

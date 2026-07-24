@@ -1,0 +1,32 @@
+{
+  "nav": {
+    "honeymoon": "Lune de miel",
+    "family": "Famille"
+  },
+  "search": {
+    "where": "Où",
+    "when": "Quand",
+    "tripType": "Type de voyage",
+    "any": "Tous",
+    "searchDestinations": "Rechercher des destinations",
+    "addDates": "Ajouter des dates",
+    "whereTo": "Où allez-vous ?",
+    "search": "Rechercher",
+    "nearby": "À proximité",
+    "findWhatsAroundYou": "Découvrez les environs",
+    "destinations": "Destinations",
+    "today": "Aujourd'hui",
+    "tomorrow": "Demain"
+  },
+  "menu": {
+    "menu": "Menu",
+    "about": "À propos",
+    "contact": "Contact"
+  },
+  "picker": {
+    "languageAndRegion": "Langue et région",
+    "currency": "Devise",
+    "chooseLanguage": "Choisissez une langue",
+    "chooseCurrency": "Choisissez une devise"
+  }
+}

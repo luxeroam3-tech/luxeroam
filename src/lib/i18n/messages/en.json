@@ -1,0 +1,32 @@
+{
+  "nav": {
+    "honeymoon": "Honeymoon",
+    "family": "Family"
+  },
+  "search": {
+    "where": "Where",
+    "when": "When",
+    "tripType": "Trip type",
+    "any": "Any",
+    "searchDestinations": "Search destinations",
+    "addDates": "Add dates",
+    "whereTo": "Where to?",
+    "search": "Search",
+    "nearby": "Nearby",
+    "findWhatsAroundYou": "Find what's around you",
+    "destinations": "Destinations",
+    "today": "Today",
+    "tomorrow": "Tomorrow"
+  },
+  "menu": {
+    "menu": "Menu",
+    "about": "About",
+    "contact": "Contact"
+  },
+  "picker": {
+    "languageAndRegion": "Language and region",
+    "currency": "Currency",
+    "chooseLanguage": "Choose a language",
+    "chooseCurrency": "Choose a currency"
+  }
+}
