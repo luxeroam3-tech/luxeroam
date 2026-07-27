@@ -1,16 +1,13 @@
 import { Header } from "@/components/header";
 import { DestinationRow } from "@/components/destination-row";
-import {
-  EditorialBand,
-  FilterChipRail,
-  FilterRail,
-  ResultsGrid,
-} from "@/components/collection-skeletons";
+import { PlaceCard } from "@/components/place-card";
+import { getAllPlaces } from "@/lib/data";
 import type { DestinationSummary } from "@/lib/data";
 
 type CollectionPageProps = {
   title: string;
   subtitle: string;
+  packageType: string;
   destinations: DestinationSummary[];
   packageTypes: string[];
 };
@@ -19,12 +16,18 @@ type CollectionPageProps = {
  * Shared layout for the honeymoon and family screens. No hero - the header and
  * search bar sit straight on top of the results, same as the landing page.
  */
-export function CollectionPage({
+export async function CollectionPage({
   title,
   subtitle,
+  packageType,
   destinations,
   packageTypes,
 }: CollectionPageProps) {
+  const places = await getAllPlaces(packageType);
+  const regionsWithPlaces = destinations.filter((destination) =>
+    places.some((place) => place.region_slug === destination.slug),
+  );
+
   return (
     <main className="flex flex-1 flex-col pb-28">
       <Header destinations={destinations} packageTypes={packageTypes} />
@@ -34,24 +37,24 @@ export function CollectionPage({
           <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
           <p className="text-sm text-muted-foreground">{subtitle}</p>
         </div>
-        <FilterChipRail />
+        <p className="text-sm text-muted-foreground">
+          {places.length} destinations across {regionsWithPlaces.length} regions
+        </p>
       </section>
 
-      <section className="grid grid-cols-1 gap-8 px-6 py-8 lg:grid-cols-[260px_1fr]">
-        <FilterRail />
-        <div className="flex flex-col gap-10">
-          <ResultsGrid count={6} />
-          <EditorialBand />
-          <ResultsGrid count={6} />
-        </div>
+      <section className="grid grid-cols-1 gap-x-4 gap-y-8 px-6 py-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {places.map((place) => (
+          <PlaceCard key={`${place.region_slug}-${place.slug}`} place={place} />
+        ))}
       </section>
 
-      {destinations.map((destination) => (
+      {regionsWithPlaces.map((destination) => (
         <DestinationRow
           key={destination.slug}
           title={destination.region}
           subtitle={destination.tagline}
           href={`/destinations/${destination.slug}`}
+          places={places.filter((p) => p.region_slug === destination.slug)}
         />
       ))}
     </main>

@@ -18,6 +18,7 @@ export default async function HoneymoonPage() {
     <CollectionPage
       title="Honeymoons"
       subtitle="Slow mornings, private guides, and rooms worth staying in."
+      packageType="honeymoon"
       destinations={destinations}
       packageTypes={packageTypes}
     />

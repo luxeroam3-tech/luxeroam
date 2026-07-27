@@ -29,24 +29,85 @@ export type Place = {
   name: string;
   blurb: string | null;
   package_types: string[];
+  rating: number | null;
+  review_count: number | null;
+  price_from: number | null;
+  region: string;
+  region_slug: string;
   place_photos: PlacePhoto[];
 };
+
+const PLACE_FIELDS =
+  "slug, name, blurb, package_types, rating, review_count, price_from, sort_order, place_photos(url, alt, photographer_name, photographer_url, sort_order)";
+
+type RawRegion = {
+  slug: string;
+  region: string;
+  places: (Omit<Place, "region" | "region_slug"> & { sort_order: number })[];
+  packages: { price_from: number | null; type: string }[];
+};
+
+/** Cheapest package in a region, used when a place has no price of its own. */
+function regionPriceFloor(packages: { price_from: number | null }[]) {
+  const prices = packages
+    .map((p) => (p.price_from === null ? null : Number(p.price_from)))
+    .filter((p): p is number => p !== null);
+  return prices.length > 0 ? Math.min(...prices) : null;
+}
+
+function flatten(region: RawRegion, typeFilter?: string): Place[] {
+  const floor = regionPriceFloor(
+    typeFilter
+      ? region.packages.filter((p) => p.type === typeFilter)
+      : region.packages,
+  );
+
+  return region.places
+    .filter((place) => !typeFilter || place.package_types.includes(typeFilter))
+    .slice()
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map((place) => ({
+      ...place,
+      region: region.region,
+      region_slug: region.slug,
+      price_from: place.price_from === null ? floor : Number(place.price_from),
+    }));
+}
 
 export async function getPlaces(regionSlug: string): Promise<Place[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("destinations")
-    .select(
-      "places(slug, name, blurb, package_types, sort_order, place_photos(url, alt, photographer_name, photographer_url, sort_order))",
-    )
+    .select(`slug, region, packages(price_from, type), places(${PLACE_FIELDS})`)
     .eq("slug", regionSlug)
     .maybeSingle();
 
   if (error) throw error;
   if (!data) return [];
+  return flatten(data as unknown as RawRegion);
+}
 
-  const places = (data.places ?? []) as (Place & { sort_order: number })[];
-  return places.slice().sort((a, b) => a.sort_order - b.sort_order);
+/**
+ * Places across every region, optionally narrowed to one package type.
+ * Places with photography come first so the rows lead with real imagery.
+ */
+export async function getAllPlaces(typeFilter?: string): Promise<Place[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("destinations")
+    .select(`slug, region, packages(price_from, type), places(${PLACE_FIELDS})`)
+    .order("sort_order");
+
+  if (error) throw error;
+
+  const places = ((data ?? []) as unknown as RawRegion[]).flatMap((region) =>
+    flatten(region, typeFilter),
+  );
+
+  return places.sort(
+    (a, b) =>
+      (b.place_photos.length > 0 ? 1 : 0) - (a.place_photos.length > 0 ? 1 : 0),
+  );
 }
 
 export type PackageDetail = {

@@ -5,8 +5,8 @@ import { ChevronRight, Map } from "lucide-react";
 import { Header } from "@/components/header";
 import { DestinationRow } from "@/components/destination-row";
 import { PlaceCard } from "@/components/place-card";
-import { FilterChipRail } from "@/components/collection-skeletons";
 import {
+  getAllPlaces,
   getDestination,
   getDestinations,
   getPackageTypes,
@@ -27,12 +27,14 @@ export async function generateMetadata({
 
 export default async function RegionPage({ params }: PageProps) {
   const { slug } = await params;
-  const [region, destinations, packageTypes, places] = await Promise.all([
-    getDestination(slug),
-    getDestinations(),
-    getPackageTypes(),
-    getPlaces(slug),
-  ]);
+  const [region, destinations, packageTypes, places, allPlaces] =
+    await Promise.all([
+      getDestination(slug),
+      getDestinations(),
+      getPackageTypes(),
+      getPlaces(slug),
+      getAllPlaces(),
+    ]);
 
   if (!region) notFound();
 
@@ -58,7 +60,17 @@ export default async function RegionPage({ params }: PageProps) {
           <p className="text-sm text-muted-foreground">{region.tagline}</p>
         </div>
 
-        <FilterChipRail />
+        <div className="flex flex-wrap gap-2">
+          {packageTypes.map((type) => (
+            <Link
+              key={type}
+              href={`/${type}`}
+              className="rounded-full border border-border px-4 py-2 text-sm font-medium capitalize hover:bg-muted"
+            >
+              {type}
+            </Link>
+          ))}
+        </div>
       </section>
 
       {/* Every destination inside this region. */}
@@ -88,6 +100,7 @@ export default async function RegionPage({ params }: PageProps) {
           title={item.region}
           subtitle={item.tagline}
           href={`/destinations/${item.slug}`}
+          places={allPlaces.filter((p) => p.region_slug === item.slug)}
         />
       ))}
     </main>

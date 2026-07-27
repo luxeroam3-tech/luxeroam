@@ -18,6 +18,7 @@ export default async function FamilyPage() {
     <CollectionPage
       title="Family trips"
       subtitle="Room for everyone, paced so nobody burns out by day three."
+      packageType="family"
       destinations={destinations}
       packageTypes={packageTypes}
     />

@@ -1,11 +1,14 @@
 import { DestinationRow } from "@/components/destination-row";
+import { getAllPlaces } from "@/lib/data";
 import type { DestinationSummary } from "@/lib/data";
 
 type RegionRowsProps = {
   destinations: DestinationSummary[];
 };
 
-export function RegionRows({ destinations }: RegionRowsProps) {
+export async function RegionRows({ destinations }: RegionRowsProps) {
+  const places = await getAllPlaces();
+
   return (
     <>
       {destinations.map((destination) => (
@@ -14,6 +17,7 @@ export function RegionRows({ destinations }: RegionRowsProps) {
           title={destination.region}
           subtitle={destination.tagline}
           href={`/destinations/${destination.slug}`}
+          places={places.filter((p) => p.region_slug === destination.slug)}
         />
       ))}
     </>
