@@ -21,7 +21,8 @@ export function LanguageCurrencyPicker({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const { locale, setLocale, currency, setCurrency, t, ratesLoading } = useI18n();
+  const { locale, setLocale, currency, setCurrency, t, ratesLoading } =
+    useI18n();
   const [tab, setTab] = useState<Tab>("language");
 
   return (
@@ -29,7 +30,9 @@ export function LanguageCurrencyPicker({
       <SheetContent side="right" className="w-full sm:max-w-md">
         <SheetHeader>
           <SheetTitle>
-            {tab === "language" ? t("picker.languageAndRegion") : t("picker.currency")}
+            {tab === "language"
+              ? t("picker.languageAndRegion")
+              : t("picker.currency")}
           </SheetTitle>
         </SheetHeader>
 
@@ -39,7 +42,9 @@ export function LanguageCurrencyPicker({
             onClick={() => setTab("language")}
             className={cn(
               "rounded-full px-4 py-1.5 text-sm font-medium",
-              tab === "language" ? "bg-foreground text-background" : "hover:bg-muted"
+              tab === "language"
+                ? "bg-foreground text-background"
+                : "hover:bg-muted",
             )}
           >
             {t("picker.languageAndRegion")}
@@ -49,7 +54,9 @@ export function LanguageCurrencyPicker({
             onClick={() => setTab("currency")}
             className={cn(
               "rounded-full px-4 py-1.5 text-sm font-medium",
-              tab === "currency" ? "bg-foreground text-background" : "hover:bg-muted"
+              tab === "currency"
+                ? "bg-foreground text-background"
+                : "hover:bg-muted",
             )}
           >
             {t("picker.currency")}
@@ -69,11 +76,13 @@ export function LanguageCurrencyPicker({
                   onClick={() => setLocale(l.code)}
                   className={cn(
                     "rounded-lg border p-3 text-left hover:bg-muted",
-                    locale === l.code ? "border-foreground" : "border-border"
+                    locale === l.code ? "border-foreground" : "border-border",
                   )}
                 >
                   <div className="text-sm font-medium">{l.label}</div>
-                  <div className="text-xs text-muted-foreground">{l.region}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {l.region}
+                  </div>
                 </button>
               ))}
             </div>
@@ -92,7 +101,7 @@ export function LanguageCurrencyPicker({
                   onClick={() => setCurrency(c.code)}
                   className={cn(
                     "rounded-lg border p-3 text-left hover:bg-muted",
-                    currency === c.code ? "border-foreground" : "border-border"
+                    currency === c.code ? "border-foreground" : "border-border",
                   )}
                 >
                   <div className="text-sm font-medium">{c.label}</div>

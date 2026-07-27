@@ -23,6 +23,8 @@ export async function getPackageTypes(): Promise<string[]> {
 
   if (error) throw error;
   const order = ["honeymoon", "family"];
-  const types = Array.from(new Set((data ?? []).map((row) => row.type))) as string[];
+  const types = Array.from(
+    new Set((data ?? []).map((row) => row.type)),
+  ) as string[];
   return types.sort((a, b) => order.indexOf(a) - order.indexOf(b));
 }

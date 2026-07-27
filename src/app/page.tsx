@@ -11,7 +11,7 @@ export default async function Home() {
   ]);
 
   return (
-    <main className="flex flex-1 flex-col">
+    <main className="flex flex-1 flex-col pb-28">
       <Header destinations={destinations} packageTypes={packageTypes} />
       <FeaturedDestinations />
       <BentoGrid />

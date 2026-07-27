@@ -4,7 +4,7 @@ export async function GET() {
   // Free tier only allows the provider's default EUR base, so rebase to USD here.
   const res = await fetch(
     `https://api.exchangerate.host/latest?access_key=${key}`,
-    { next: { revalidate: 3600 } }
+    { next: { revalidate: 3600 } },
   );
   const data = await res.json();
 
@@ -16,7 +16,7 @@ export async function GET() {
   }
 
   const rates = Object.fromEntries(
-    Object.entries(eurRates).map(([code, rate]) => [code, rate / usdPerEur])
+    Object.entries(eurRates).map(([code, rate]) => [code, rate / usdPerEur]),
   );
 
   return Response.json({ base: "USD", rates, updatedAt: data.date });

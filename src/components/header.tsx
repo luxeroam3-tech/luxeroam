@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu, Globe } from "lucide-react";
 import { SearchBar, TRIP_TYPE_META } from "@/components/search-bar";
 import { LanguageCurrencyPicker } from "@/components/language-currency-picker";
@@ -26,6 +28,7 @@ type HeaderProps = {
 
 export function Header({ destinations, packageTypes }: HeaderProps) {
   const { t } = useI18n();
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -97,27 +100,30 @@ export function Header({ destinations, packageTypes }: HeaderProps) {
             }`}
           >
             <div className="grid min-h-20 grid-cols-[1fr_auto_1fr] items-center gap-4 py-3">
-              <Image
-                src="/logo/logo.png"
-                alt="Luxe Roam"
-                width={1137}
-                height={352}
-                priority
-                className="h-8 w-auto justify-self-start object-contain sm:h-11"
-              />
+              <Link href="/" className="justify-self-start">
+                <Image
+                  src="/logo/logo.png"
+                  alt="Luxe Roam"
+                  width={1137}
+                  height={352}
+                  priority
+                  className="h-8 w-auto object-contain sm:h-11"
+                />
+              </Link>
 
               <div className="justify-self-center">
                 <nav className="hidden items-center gap-8 sm:flex">
-                  {packageTypes.map((type, i) => {
+                  {packageTypes.map((type) => {
                     const label =
                       t(`nav.${type}`) || TRIP_TYPE_META[type]?.label || type;
                     const icon = NAV_ICONS[type] ?? "/icons/honeymoon.png";
+                    const active = pathname.startsWith(`/${type}`);
                     return (
-                      <a
+                      <Link
                         key={type}
-                        href="#"
+                        href={`/${type}`}
                         className={`flex flex-col items-center gap-1 border-b-2 pb-2 pt-1 text-sm font-medium transition-colors ${
-                          i === 0
+                          active
                             ? "border-foreground text-foreground"
                             : "border-transparent text-muted-foreground hover:text-foreground"
                         }`}
@@ -130,7 +136,7 @@ export function Header({ destinations, packageTypes }: HeaderProps) {
                           className="size-11 object-contain"
                         />
                         {label}
-                      </a>
+                      </Link>
                     );
                   })}
                 </nav>

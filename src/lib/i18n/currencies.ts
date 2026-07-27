@@ -44,7 +44,9 @@ const REGION_TO_CURRENCY: Record<string, CurrencyCode> = {
   NL: "EUR",
 };
 
-export function guessCurrencyFromBrowser(navigatorLanguage: string): CurrencyCode {
+export function guessCurrencyFromBrowser(
+  navigatorLanguage: string,
+): CurrencyCode {
   const region = navigatorLanguage.split("-")[1]?.toUpperCase();
   if (region && REGION_TO_CURRENCY[region]) return REGION_TO_CURRENCY[region];
   return DEFAULT_CURRENCY;

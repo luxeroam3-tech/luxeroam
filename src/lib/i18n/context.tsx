@@ -33,7 +33,7 @@ function getNested(obj: Record<string, unknown>, path: string): string {
         typeof acc === "object" && acc !== null
           ? (acc as Record<string, unknown>)[key]
           : undefined,
-      obj
+      obj,
     );
   return typeof value === "string" ? value : path;
 }
@@ -60,11 +60,11 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const [ratesLoading, setRatesLoading] = useState(true);
 
   useEffect(() => {
-    const savedLocale = localStorage.getItem(LOCALE_STORAGE_KEY) as
-      | LocaleCode
-      | null;
+    const savedLocale = localStorage.getItem(
+      LOCALE_STORAGE_KEY,
+    ) as LocaleCode | null;
     const savedCurrency = localStorage.getItem(
-      CURRENCY_STORAGE_KEY
+      CURRENCY_STORAGE_KEY,
     ) as CurrencyCode | null;
 
     if (savedLocale && LOCALES.some((l) => l.code === savedLocale)) {
@@ -116,7 +116,15 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    return { locale, setLocale, currency, setCurrency, t, formatPrice, ratesLoading };
+    return {
+      locale,
+      setLocale,
+      currency,
+      setCurrency,
+      t,
+      formatPrice,
+      ratesLoading,
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locale, currency, rates, ratesLoading]);
 
