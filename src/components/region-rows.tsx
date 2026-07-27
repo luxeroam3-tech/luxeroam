@@ -13,6 +13,7 @@ export function RegionRows({ destinations }: RegionRowsProps) {
           key={destination.slug}
           title={destination.region}
           subtitle={destination.tagline}
+          href={`/destinations/${destination.slug}`}
         />
       ))}
     </>

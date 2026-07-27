@@ -1,20 +1,37 @@
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { SkeletonCard } from "@/components/skeleton-card";
 
 type DestinationRowProps = {
   title: string;
   subtitle?: string;
   count?: number;
+  href?: string;
 };
 
 export function DestinationRow({
   title,
   subtitle,
   count = 6,
+  href,
 }: DestinationRowProps) {
+  const heading = (
+    <h2 className="flex items-center gap-1 text-xl font-semibold tracking-tight">
+      {title}
+      {href && <ChevronRight className="size-5" />}
+    </h2>
+  );
+
   return (
     <section className="flex flex-col gap-4 py-8">
       <div className="flex flex-col gap-0.5 px-6">
-        <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
+        {href ? (
+          <Link href={href} className="w-fit hover:underline">
+            {heading}
+          </Link>
+        ) : (
+          heading
+        )}
         {subtitle && (
           <p className="text-sm text-muted-foreground">{subtitle}</p>
         )}
