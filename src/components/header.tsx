@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Menu, Globe } from "lucide-react";
 import { SearchBar, TRIP_TYPE_META } from "@/components/search-bar";
-import { CompactPill } from "@/components/compact-pill";
 import { LanguageCurrencyPicker } from "@/components/language-currency-picker";
 import { useI18n } from "@/lib/i18n/context";
 import {
@@ -30,7 +29,6 @@ export function Header({ destinations, packageTypes }: HeaderProps) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [searchRowClipped, setSearchRowClipped] = useState(false);
   const scrolledRef = useRef(scrolled);
   scrolledRef.current = scrolled;
 
@@ -48,9 +46,6 @@ export function Header({ destinations, packageTypes }: HeaderProps) {
       if (Math.abs(delta) > 6) {
         if (delta > 0 && y > 80 && !scrolledRef.current) {
           setScrolled(true);
-          // Batched into the same commit as setScrolled so the row is never
-          // painted collapsed-but-unclipped, which spills it over the page.
-          setSearchRowClipped(true);
         } else if (delta < 0 && scrolledRef.current) {
           setScrolled(false);
         }
@@ -74,15 +69,6 @@ export function Header({ destinations, packageTypes }: HeaderProps) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // The search row needs overflow-hidden for the grid-rows collapse animation,
-  // but that also clips the search bar's dropdown panels. Clipping is turned on
-  // with the collapse itself (above); release it once the expand finishes.
-  useEffect(() => {
-    if (scrolled) return;
-    const id = window.setTimeout(() => setSearchRowClipped(false), 300);
-    return () => window.clearTimeout(id);
-  }, [scrolled]);
-
   const menuLinks = [
     { label: t("menu.about"), href: "#" },
     { label: t("menu.contact"), href: "#" },
@@ -97,14 +83,19 @@ export function Header({ destinations, packageTypes }: HeaderProps) {
     // animation.
     <div className="h-[143px] sm:h-[185px]">
       <header className="fixed inset-x-0 top-0 z-40 flex flex-col border-b border-border bg-white px-6">
-        {/* Mobile collapses the brand row away on scroll (desktop keeps it and
-          collapses the search row below instead). */}
+        {/* Scrolling down collapses everything except the search bar. The row
+            track is set inline rather than with grid-rows-[0fr]/[1fr]: those
+            arbitrary utilities were silently absent from the generated CSS, so
+            the class flipped but the row never actually collapsed. */}
         <div
-          className={`grid transition-[grid-template-rows] duration-300 ease-in-out sm:grid-rows-[1fr] ${
-            scrolled ? "grid-rows-[0fr]" : "grid-rows-[1fr]"
-          }`}
+          className="grid min-h-0"
+          style={{ gridTemplateRows: scrolled ? "0fr" : "1fr" }}
         >
-          <div className="overflow-hidden">
+          <div
+            className={`overflow-hidden transition-opacity duration-200 ${
+              scrolled ? "opacity-0" : "opacity-100"
+            }`}
+          >
             <div className="grid min-h-20 grid-cols-[1fr_auto_1fr] items-center gap-4 py-3">
               <Image
                 src="/logo/logo.png"
@@ -115,46 +106,34 @@ export function Header({ destinations, packageTypes }: HeaderProps) {
                 className="h-8 w-auto justify-self-start object-contain sm:h-11"
               />
 
-              {/* Exactly one of these is mounted at a time. Cross-fading them in
-                the same slot meant both were painted during the transition,
-                so the pill visibly overlapped the nav icons. */}
               <div className="justify-self-center">
-                {scrolled ? (
-                  <div className="hidden sm:block">
-                    <CompactPill
-                      destinations={destinations}
-                      packageTypes={packageTypes}
-                    />
-                  </div>
-                ) : (
-                  <nav className="hidden items-center gap-8 sm:flex">
-                    {packageTypes.map((type, i) => {
-                      const label =
-                        t(`nav.${type}`) || TRIP_TYPE_META[type]?.label || type;
-                      const icon = NAV_ICONS[type] ?? "/icons/honeymoon.png";
-                      return (
-                        <a
-                          key={type}
-                          href="#"
-                          className={`flex flex-col items-center gap-1 border-b-2 pb-2 pt-1 text-sm font-medium transition-colors ${
-                            i === 0
-                              ? "border-foreground text-foreground"
-                              : "border-transparent text-muted-foreground hover:text-foreground"
-                          }`}
-                        >
-                          <Image
-                            src={icon}
-                            alt=""
-                            width={44}
-                            height={44}
-                            className="size-11 object-contain"
-                          />
-                          {label}
-                        </a>
-                      );
-                    })}
-                  </nav>
-                )}
+                <nav className="hidden items-center gap-8 sm:flex">
+                  {packageTypes.map((type, i) => {
+                    const label =
+                      t(`nav.${type}`) || TRIP_TYPE_META[type]?.label || type;
+                    const icon = NAV_ICONS[type] ?? "/icons/honeymoon.png";
+                    return (
+                      <a
+                        key={type}
+                        href="#"
+                        className={`flex flex-col items-center gap-1 border-b-2 pb-2 pt-1 text-sm font-medium transition-colors ${
+                          i === 0
+                            ? "border-foreground text-foreground"
+                            : "border-transparent text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <Image
+                          src={icon}
+                          alt=""
+                          width={44}
+                          height={44}
+                          className="size-11 object-contain"
+                        />
+                        {label}
+                      </a>
+                    );
+                  })}
+                </nav>
               </div>
 
               <div className="flex items-center gap-3 justify-self-end">
@@ -175,23 +154,9 @@ export function Header({ destinations, packageTypes }: HeaderProps) {
           </div>
         </div>
 
-        <div
-          className={`grid grid-rows-[1fr] transition-[grid-template-rows] duration-300 ease-in-out ${
-            scrolled ? "sm:grid-rows-[0fr]" : "sm:grid-rows-[1fr]"
-          }`}
-        >
-          <div
-            className={
-              searchRowClipped ? "overflow-hidden" : "overflow-visible"
-            }
-          >
-            <div className="flex justify-center pb-4">
-              <SearchBar
-                destinations={destinations}
-                packageTypes={packageTypes}
-              />
-            </div>
-          </div>
+        {/* Always present - this is the one thing that survives the collapse. */}
+        <div className="flex justify-center pb-4">
+          <SearchBar destinations={destinations} packageTypes={packageTypes} />
         </div>
 
         <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
