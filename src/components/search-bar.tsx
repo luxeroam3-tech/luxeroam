@@ -24,7 +24,10 @@ import type { DestinationSummary } from "@/lib/data";
 
 type Panel = "where" | "when" | "type" | null;
 
-export const TRIP_TYPE_META: Record<string, { label: string; icon: typeof Heart }> = {
+export const TRIP_TYPE_META: Record<
+  string,
+  { label: string; icon: typeof Heart }
+> = {
   honeymoon: { label: "Honeymoon", icon: Heart },
   family: { label: "Family", icon: Users },
 };
@@ -38,9 +41,9 @@ type SearchBarProps = {
   packageTypes: string[];
 };
 
-function formatDate(d: Date) {
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
+// Jan 7 2024 is a Sunday; used only as an anchor to derive localized weekday
+// initials so the calendar header follows the active locale.
+const WEEKDAY_ANCHOR_SUNDAY = new Date(2024, 0, 7);
 
 function buildMonthGrid(year: number, month: number) {
   const first = new Date(year, month, 1);
@@ -52,7 +55,7 @@ function buildMonthGrid(year: number, month: number) {
 }
 
 export function SearchBar({ destinations, packageTypes }: SearchBarProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [panel, setPanel] = useState<Panel>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [destination, setDestination] = useState("");
@@ -78,10 +81,21 @@ export function SearchBar({ destinations, packageTypes }: SearchBarProps) {
   tomorrow.setDate(today.getDate() + 1);
 
   const grid = buildMonthGrid(viewYear, viewMonth);
+
+  function formatDate(d: Date) {
+    return d.toLocaleDateString(locale, { month: "short", day: "numeric" });
+  }
+
   const monthLabel = new Date(viewYear, viewMonth, 1).toLocaleDateString(
-    "en-US",
-    { month: "long", year: "numeric" }
+    locale,
+    { month: "long", year: "numeric" },
   );
+
+  const weekdays = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(WEEKDAY_ANCHOR_SUNDAY);
+    d.setDate(d.getDate() + i);
+    return d.toLocaleDateString(locale, { weekday: "narrow" });
+  });
 
   function prevMonth() {
     if (viewMonth === 0) {
@@ -187,7 +201,7 @@ export function SearchBar({ destinations, packageTypes }: SearchBarProps) {
         </div>
 
         <div className="grid grid-cols-7 gap-1 px-1 text-center text-xs text-muted-foreground">
-          {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
+          {weekdays.map((d, i) => (
             <div key={i}>{d}</div>
           ))}
         </div>
@@ -209,7 +223,7 @@ export function SearchBar({ destinations, packageTypes }: SearchBarProps) {
                 }}
                 className={cn(
                   "flex aspect-square items-center justify-center rounded-full text-sm hover:bg-muted disabled:text-muted-foreground/40 disabled:hover:bg-transparent",
-                  isSelected && "bg-primary text-primary-foreground"
+                  isSelected && "bg-primary text-primary-foreground",
                 )}
               >
                 {day}
@@ -238,7 +252,7 @@ export function SearchBar({ destinations, packageTypes }: SearchBarProps) {
               }}
               className={cn(
                 "flex items-center gap-2 rounded-full border border-border px-4 py-2.5 text-sm hover:bg-muted",
-                tripType === label && "border-foreground bg-muted"
+                tripType === label && "border-foreground bg-muted",
               )}
             >
               <Icon className="size-4" />
@@ -253,17 +267,14 @@ export function SearchBar({ destinations, packageTypes }: SearchBarProps) {
   return (
     <>
       {/* Desktop / tablet segmented bar */}
-      <div
-        ref={rootRef}
-        className="relative hidden w-full max-w-3xl sm:block"
-      >
+      <div ref={rootRef} className="relative hidden w-full max-w-3xl sm:block">
         <div className="flex items-center rounded-full border border-border bg-white shadow-sm">
           <button
             type="button"
             onClick={() => setPanel(panel === "where" ? null : "where")}
             className={cn(
               "flex-1 rounded-full px-6 py-3 text-left transition-colors hover:bg-muted",
-              panel === "where" && "bg-muted ring-1 ring-foreground/10"
+              panel === "where" && "bg-muted ring-1 ring-foreground/10",
             )}
           >
             <div className="text-xs font-semibold text-foreground">
@@ -281,7 +292,7 @@ export function SearchBar({ destinations, packageTypes }: SearchBarProps) {
             onClick={() => setPanel(panel === "when" ? null : "when")}
             className={cn(
               "flex-1 rounded-full px-6 py-3 text-left transition-colors hover:bg-muted",
-              panel === "when" && "bg-muted ring-1 ring-foreground/10"
+              panel === "when" && "bg-muted ring-1 ring-foreground/10",
             )}
           >
             <div className="text-xs font-semibold text-foreground">
@@ -299,7 +310,7 @@ export function SearchBar({ destinations, packageTypes }: SearchBarProps) {
             onClick={() => setPanel(panel === "type" ? null : "type")}
             className={cn(
               "flex-1 rounded-full px-6 py-3 text-left transition-colors hover:bg-muted",
-              panel === "type" && "bg-muted ring-1 ring-foreground/10"
+              panel === "type" && "bg-muted ring-1 ring-foreground/10",
             )}
           >
             <div className="text-xs font-semibold text-foreground">
@@ -382,9 +393,7 @@ export function SearchBar({ destinations, packageTypes }: SearchBarProps) {
                 label={t("search.where")}
                 value={destination || t("search.searchDestinations")}
                 open={panel === "where"}
-                onToggle={() =>
-                  setPanel(panel === "where" ? null : "where")
-                }
+                onToggle={() => setPanel(panel === "where" ? null : "where")}
               >
                 <WherePanel />
               </MobileAccordion>
@@ -445,15 +454,13 @@ function MobileAccordion({
         className="flex w-full items-center justify-between px-4 py-3 text-left"
       >
         <span>
-          <div className="text-xs font-semibold text-foreground">
-            {label}
-          </div>
+          <div className="text-xs font-semibold text-foreground">{label}</div>
           <div className="text-sm text-muted-foreground">{value}</div>
         </span>
         <ChevronDown
           className={cn(
             "size-4 text-muted-foreground transition-transform",
-            open && "rotate-180"
+            open && "rotate-180",
           )}
         />
       </button>
