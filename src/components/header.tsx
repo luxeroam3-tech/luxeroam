@@ -36,18 +36,30 @@ export function Header({ destinations, packageTypes }: HeaderProps) {
 
   useEffect(() => {
     let ticking = false;
+    let lastY = window.scrollY;
 
     function update() {
       const y = window.scrollY;
-      // hysteresis: collapse past 80px, only re-expand once back under 40px
-      if (!scrolledRef.current && y > 80) {
-        setScrolled(true);
-        // Batched into the same commit as setScrolled so the row is never
-        // painted collapsed-but-unclipped, which spills it over the page.
-        setSearchRowClipped(true);
-      } else if (scrolledRef.current && y < 40) {
-        setScrolled(false);
+      const delta = y - lastY;
+
+      // Direction-driven: collapse when scrolling down past the header, expand
+      // as soon as the user scrolls back up. The 6px deadzone keeps trackpad
+      // and momentum jitter from flipping the state.
+      if (Math.abs(delta) > 6) {
+        if (delta > 0 && y > 80 && !scrolledRef.current) {
+          setScrolled(true);
+          // Batched into the same commit as setScrolled so the row is never
+          // painted collapsed-but-unclipped, which spills it over the page.
+          setSearchRowClipped(true);
+        } else if (delta < 0 && scrolledRef.current) {
+          setScrolled(false);
+        }
+        lastY = y;
       }
+
+      // Always expanded at the very top, regardless of direction.
+      if (y <= 80 && scrolledRef.current) setScrolled(false);
+
       ticking = false;
     }
 
@@ -96,10 +108,18 @@ export function Header({ destinations, packageTypes }: HeaderProps) {
               className="h-8 w-auto justify-self-start object-contain sm:h-11"
             />
 
-            <div className="relative justify-self-center">
-              <div
-                className={`transition-opacity duration-200 ${scrolled ? "pointer-events-none absolute inset-0 opacity-0" : "opacity-100"}`}
-              >
+            {/* Exactly one of these is mounted at a time. Cross-fading them in
+                the same slot meant both were painted during the transition,
+                so the pill visibly overlapped the nav icons. */}
+            <div className="justify-self-center">
+              {scrolled ? (
+                <div className="hidden sm:block">
+                  <CompactPill
+                    destinations={destinations}
+                    packageTypes={packageTypes}
+                  />
+                </div>
+              ) : (
                 <nav className="hidden items-center gap-8 sm:flex">
                   {packageTypes.map((type, i) => {
                     const label =
@@ -127,15 +147,7 @@ export function Header({ destinations, packageTypes }: HeaderProps) {
                     );
                   })}
                 </nav>
-              </div>
-              <div
-                className={`hidden transition-opacity duration-200 sm:block ${scrolled ? "opacity-100" : "pointer-events-none absolute inset-0 opacity-0"}`}
-              >
-                <CompactPill
-                  destinations={destinations}
-                  packageTypes={packageTypes}
-                />
-              </div>
+              )}
             </div>
 
             <div className="flex items-center gap-3 justify-self-end">
