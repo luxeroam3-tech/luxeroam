@@ -17,6 +17,38 @@ export async function getDestinations(): Promise<DestinationSummary[]> {
   return data ?? [];
 }
 
+export type PlacePhoto = {
+  url: string;
+  alt: string | null;
+  photographer_name: string | null;
+  photographer_url: string | null;
+};
+
+export type Place = {
+  slug: string;
+  name: string;
+  blurb: string | null;
+  package_types: string[];
+  place_photos: PlacePhoto[];
+};
+
+export async function getPlaces(regionSlug: string): Promise<Place[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("destinations")
+    .select(
+      "places(slug, name, blurb, package_types, sort_order, place_photos(url, alt, photographer_name, photographer_url, sort_order))",
+    )
+    .eq("slug", regionSlug)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return [];
+
+  const places = (data.places ?? []) as (Place & { sort_order: number })[];
+  return places.slice().sort((a, b) => a.sort_order - b.sort_order);
+}
+
 export type PackageDetail = {
   id: string;
   type: string;

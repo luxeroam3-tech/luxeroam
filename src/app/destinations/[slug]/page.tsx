@@ -4,9 +4,14 @@ import { notFound } from "next/navigation";
 import { ChevronRight, Map } from "lucide-react";
 import { Header } from "@/components/header";
 import { DestinationRow } from "@/components/destination-row";
-import { SkeletonCard } from "@/components/skeleton-card";
+import { PlaceCard } from "@/components/place-card";
 import { FilterChipRail } from "@/components/collection-skeletons";
-import { getDestination, getDestinations, getPackageTypes } from "@/lib/data";
+import {
+  getDestination,
+  getDestinations,
+  getPackageTypes,
+  getPlaces,
+} from "@/lib/data";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -22,10 +27,11 @@ export async function generateMetadata({
 
 export default async function RegionPage({ params }: PageProps) {
   const { slug } = await params;
-  const [region, destinations, packageTypes] = await Promise.all([
+  const [region, destinations, packageTypes, places] = await Promise.all([
     getDestination(slug),
     getDestinations(),
     getPackageTypes(),
+    getPlaces(slug),
   ]);
 
   if (!region) notFound();
@@ -55,13 +61,14 @@ export default async function RegionPage({ params }: PageProps) {
         <FilterChipRail />
       </section>
 
-      {/* Every destination inside this region. Skeletons until the per-
-          destination records and photos exist. */}
+      {/* Every destination inside this region. */}
       <section className="flex flex-col gap-6 px-6 py-8">
-        <div className="h-4 w-40 animate-pulse rounded bg-muted" />
+        <p className="text-sm text-muted-foreground">
+          {places.length} destinations in {region.region}
+        </p>
         <div className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <SkeletonCard key={i} />
+          {places.map((place) => (
+            <PlaceCard key={place.slug} place={place} />
           ))}
         </div>
       </section>
