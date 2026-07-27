@@ -30,6 +30,7 @@ export function Header({ destinations, packageTypes }: HeaderProps) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [searchRowClipped, setSearchRowClipped] = useState(false);
   const scrolledRef = useRef(scrolled);
   scrolledRef.current = scrolled;
 
@@ -39,8 +40,14 @@ export function Header({ destinations, packageTypes }: HeaderProps) {
     function update() {
       const y = window.scrollY;
       // hysteresis: collapse past 80px, only re-expand once back under 40px
-      if (!scrolledRef.current && y > 80) setScrolled(true);
-      else if (scrolledRef.current && y < 40) setScrolled(false);
+      if (!scrolledRef.current && y > 80) {
+        setScrolled(true);
+        // Batched into the same commit as setScrolled so the row is never
+        // painted collapsed-but-unclipped, which spills it over the page.
+        setSearchRowClipped(true);
+      } else if (scrolledRef.current && y < 40) {
+        setScrolled(false);
+      }
       ticking = false;
     }
 
@@ -54,6 +61,15 @@ export function Header({ destinations, packageTypes }: HeaderProps) {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // The search row needs overflow-hidden for the grid-rows collapse animation,
+  // but that also clips the search bar's dropdown panels. Clipping is turned on
+  // with the collapse itself (above); release it once the expand finishes.
+  useEffect(() => {
+    if (scrolled) return;
+    const id = window.setTimeout(() => setSearchRowClipped(false), 300);
+    return () => window.clearTimeout(id);
+  }, [scrolled]);
 
   const menuLinks = [
     { label: t("menu.about"), href: "#" },
@@ -145,7 +161,9 @@ export function Header({ destinations, packageTypes }: HeaderProps) {
           scrolled ? "sm:grid-rows-[0fr]" : "sm:grid-rows-[1fr]"
         }`}
       >
-        <div className="overflow-hidden">
+        <div
+          className={searchRowClipped ? "overflow-hidden" : "overflow-visible"}
+        >
           <div className="flex justify-center pb-4">
             <SearchBar
               destinations={destinations}
