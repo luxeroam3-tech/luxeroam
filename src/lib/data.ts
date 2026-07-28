@@ -110,6 +110,75 @@ export async function getAllPlaces(typeFilter?: string): Promise<Place[]> {
   );
 }
 
+export type SearchParams = {
+  where?: string;
+  type?: string;
+};
+
+/**
+ * Free-text search over places. Matches the place name, its blurb, and the
+ * region name, so "kenya", "safari" and "amboseli" all return sensible results.
+ */
+export async function searchPlaces({
+  where,
+  type,
+}: SearchParams): Promise<Place[]> {
+  const all = await getAllPlaces(type);
+  const term = where?.trim().toLowerCase();
+  if (!term) return all;
+
+  return all.filter((place) =>
+    [place.name, place.blurb ?? "", place.region]
+      .join(" ")
+      .toLowerCase()
+      .includes(term),
+  );
+}
+
+export type Suggestion = {
+  kind: "region" | "place";
+  label: string;
+  sublabel: string;
+  href: string;
+  value: string;
+};
+
+/** Typeahead options for the search bar's "Where" field. */
+export async function getSuggestions(query: string): Promise<Suggestion[]> {
+  const [regions, places] = await Promise.all([
+    getDestinations(),
+    getAllPlaces(),
+  ]);
+  const term = query.trim().toLowerCase();
+
+  const regionHits: Suggestion[] = regions
+    .filter((r) => !term || r.region.toLowerCase().includes(term))
+    .map((r) => ({
+      kind: "region" as const,
+      label: r.region,
+      sublabel: r.tagline,
+      href: `/destinations/${r.slug}`,
+      value: r.region,
+    }));
+
+  const placeHits: Suggestion[] = places
+    .filter(
+      (p) =>
+        !term ||
+        p.name.toLowerCase().includes(term) ||
+        (p.blurb ?? "").toLowerCase().includes(term),
+    )
+    .map((p) => ({
+      kind: "place" as const,
+      label: p.name,
+      sublabel: p.region,
+      href: `/destinations/${p.region_slug}/${p.slug}`,
+      value: p.name,
+    }));
+
+  return [...regionHits, ...placeHits].slice(0, 12);
+}
+
 export type Review = {
   id: string;
   author_name: string;

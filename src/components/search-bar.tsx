@@ -19,8 +19,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/context";
-import type { DestinationSummary } from "@/lib/data";
+import type { DestinationSummary, Suggestion } from "@/lib/data";
 
 type Panel = "where" | "when" | "type" | null;
 
@@ -64,6 +65,8 @@ export function SearchBar({ destinations, packageTypes }: SearchBarProps) {
   const [viewYear, setViewYear] = useState(() => new Date().getFullYear());
   const [viewMonth, setViewMonth] = useState(() => new Date().getMonth());
 
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const router = useRouter();
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -75,6 +78,39 @@ export function SearchBar({ destinations, packageTypes }: SearchBarProps) {
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
+
+  // Debounced typeahead against the places and regions in the database.
+  useEffect(() => {
+    if (panel !== "where") return;
+    const controller = new AbortController();
+    const id = window.setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `/api/search/suggestions?q=${encodeURIComponent(destination)}`,
+          { signal: controller.signal },
+        );
+        const data = await res.json();
+        setSuggestions(data.suggestions ?? []);
+      } catch {
+        // aborted or offline; leave the previous suggestions in place
+      }
+    }, 150);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(id);
+    };
+  }, [destination, panel]);
+
+  function runSearch() {
+    const params = new URLSearchParams();
+    if (destination.trim()) params.set("where", destination.trim());
+    if (tripType) params.set("type", tripType);
+    if (date) params.set("when", formatDate(date));
+    setPanel(null);
+    setMobileOpen(false);
+    router.push(`/search?${params.toString()}`);
+  }
 
   const today = new Date();
   const tomorrow = new Date();
@@ -116,44 +152,74 @@ export function SearchBar({ destinations, packageTypes }: SearchBarProps) {
   }
 
   function WherePanel() {
+    const regionHits = suggestions.filter((s) => s.kind === "region");
+    const placeHits = suggestions.filter((s) => s.kind === "place");
+
     return (
-      <div className="flex flex-col gap-1">
-        <button
-          type="button"
-          onClick={() => {
-            setDestination("Nearby");
-            setPanel(null);
+      <div className="flex max-h-96 flex-col gap-1 overflow-y-auto">
+        <input
+          autoFocus
+          value={destination}
+          onChange={(e) => setDestination(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") runSearch();
           }}
-          className="flex items-center gap-3 rounded-lg p-3 text-left hover:bg-muted"
-        >
-          <span className="flex size-10 items-center justify-center rounded-full bg-muted">
-            <MapPin className="size-4" />
-          </span>
-          <span>
-            <div className="text-sm font-medium">{t("search.nearby")}</div>
-            <div className="text-xs text-muted-foreground">
-              {t("search.findWhatsAroundYou")}
+          placeholder={t("search.searchDestinations")}
+          className="mb-1 rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-foreground"
+        />
+
+        {suggestions.length === 0 && destination.trim() && (
+          <p className="px-3 py-2 text-sm text-muted-foreground">
+            Nothing matches “{destination}”.
+          </p>
+        )}
+
+        {regionHits.length > 0 && (
+          <>
+            <div className="mt-1 px-3 text-xs font-medium text-muted-foreground">
+              {t("search.destinations")}
             </div>
-          </span>
-        </button>
-        <div className="mt-1 px-3 text-xs font-medium text-muted-foreground">
-          {t("search.destinations")}
-        </div>
-        {destinations.map((d) => (
-          <button
-            key={d.slug}
-            type="button"
-            onClick={() => {
-              setDestination(d.region);
-              setPanel(null);
-            }}
-            className="rounded-lg p-3 text-left hover:bg-muted"
-          >
-            <div className="text-sm font-medium">{d.region}</div>
-            <div className="text-xs text-muted-foreground">{d.tagline}</div>
-          </button>
-        ))}
+            {regionHits.map((s) => (
+              <SuggestionRow key={s.href} suggestion={s} />
+            ))}
+          </>
+        )}
+
+        {placeHits.length > 0 && (
+          <>
+            <div className="mt-1 px-3 text-xs font-medium text-muted-foreground">
+              Places
+            </div>
+            {placeHits.map((s) => (
+              <SuggestionRow key={s.href} suggestion={s} />
+            ))}
+          </>
+        )}
       </div>
+    );
+  }
+
+  function SuggestionRow({ suggestion }: { suggestion: Suggestion }) {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          setDestination(suggestion.value);
+          setPanel(null);
+          router.push(suggestion.href);
+        }}
+        className="flex items-center gap-3 rounded-lg p-2.5 text-left hover:bg-muted"
+      >
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+          <MapPin className="size-4" />
+        </span>
+        <span className="min-w-0">
+          <div className="truncate text-sm font-medium">{suggestion.label}</div>
+          <div className="truncate text-xs text-muted-foreground">
+            {suggestion.sublabel}
+          </div>
+        </span>
+      </button>
     );
   }
 
@@ -324,6 +390,7 @@ export function SearchBar({ destinations, packageTypes }: SearchBarProps) {
           <div className="pr-2">
             <button
               type="button"
+              onClick={runSearch}
               className="flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/80"
             >
               <Search className="size-4" />
@@ -419,7 +486,7 @@ export function SearchBar({ destinations, packageTypes }: SearchBarProps) {
             <div className="border-t border-border p-4">
               <button
                 type="button"
-                onClick={() => setMobileOpen(false)}
+                onClick={runSearch}
                 className="flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/80"
               >
                 <Search className="size-4" />
