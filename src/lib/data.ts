@@ -110,6 +110,73 @@ export async function getAllPlaces(typeFilter?: string): Promise<Place[]> {
   );
 }
 
+export type Review = {
+  id: string;
+  author_name: string;
+  rating: number;
+  body: string | null;
+  created_at: string;
+};
+
+export type PlaceDetail = Place & {
+  id: string;
+  region_tagline: string;
+  reviews: Review[];
+};
+
+export async function getPlace(
+  regionSlug: string,
+  placeSlug: string,
+): Promise<PlaceDetail | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("destinations")
+    .select(
+      `slug, region, tagline, packages(price_from, type),
+       places(id, ${PLACE_FIELDS}, reviews(id, author_name, rating, body, created_at, status))`,
+    )
+    .eq("slug", regionSlug)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  type RegionWithReviews = {
+    slug: string;
+    region: string;
+    tagline: string;
+    packages: { price_from: number | null; type: string }[];
+    places: (Omit<Place, "region" | "region_slug"> & {
+      id: string;
+      sort_order: number;
+      reviews: Review[];
+    })[];
+  };
+
+  const region = data as unknown as RegionWithReviews;
+
+  const match = region.places.find((place) => place.slug === placeSlug);
+  if (!match) return null;
+
+  const [flattened] = flatten({
+    slug: region.slug,
+    region: region.region,
+    packages: region.packages,
+    places: [match],
+  });
+
+  const reviews: Review[] = (match.reviews ?? [])
+    .slice()
+    .sort((a, b) => b.created_at.localeCompare(a.created_at));
+
+  return {
+    ...flattened,
+    id: match.id,
+    region_tagline: region.tagline,
+    reviews,
+  };
+}
+
 export type PackageDetail = {
   id: string;
   type: string;

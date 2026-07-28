@@ -62,13 +62,11 @@ function PhotoFallback({ name }: { name: string }) {
 
 export function PlaceCard({ place }: { place: Place }) {
   const photo = place.place_photos?.[0];
+  const href = `/destinations/${place.region_slug}/${place.slug}`;
 
   return (
-    <article className="group flex w-full flex-col gap-3">
-      <Link
-        href={`/destinations/${place.region_slug}`}
-        className="relative aspect-square w-full overflow-hidden rounded-xl bg-muted"
-      >
+    <Link href={href} className="group flex w-full flex-col gap-3">
+      <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-muted">
         {photo ? (
           <Image
             src={`${photo.url}&w=600&h=600&q=75&fm=jpg&fit=crop`}
@@ -86,7 +84,7 @@ export function PlaceCard({ place }: { place: Place }) {
             {photo.photographer_name}/Unsplash
           </span>
         )}
-      </Link>
+      </div>
 
       <div className="flex flex-col gap-0.5">
         <div className="flex items-baseline justify-between gap-2">
@@ -122,6 +120,6 @@ export function PlaceCard({ place }: { place: Place }) {
           </p>
         )}
       </div>
-    </article>
+    </Link>
   );
 }
