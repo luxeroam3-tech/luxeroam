@@ -1,12 +1,21 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronRight, MapPin, Share, Heart } from "lucide-react";
+import {
+  ChevronRight,
+  MapPin,
+  Share,
+  Heart,
+  Map,
+  Compass,
+  ShieldCheck,
+  CalendarCheck,
+} from "lucide-react";
 import { Header } from "@/components/header";
 import { DestinationRow } from "@/components/destination-row";
+import { PlaceGallery } from "@/components/destination/place-gallery";
+import { PackageSection } from "@/components/destination/package-section";
 import { ReviewsSection, Stars } from "@/components/reviews";
-import { Price } from "@/components/price";
 import {
   getDestination,
   getDestinations,
@@ -43,8 +52,8 @@ export default async function PlacePage({ params }: PageProps) {
 
   if (!place || !region) notFound();
 
-  const photo = place.place_photos?.[0];
-  const trips = region.packages.filter((pkg) =>
+  // Only the packages this place actually appears in.
+  const packages = region.packages.filter((pkg) =>
     place.package_types.includes(pkg.type),
   );
   const others = siblings.filter((item) => item.slug !== place.slug);
@@ -95,90 +104,86 @@ export default async function PlacePage({ params }: PageProps) {
           </div>
         </div>
 
-        <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl bg-muted">
-          {photo ? (
-            <Image
-              src={`${photo.url}&w=1600&h=900&q=80&fm=jpg&fit=crop`}
-              alt={photo.alt ?? place.name}
-              fill
-              priority
-              sizes="(max-width: 1024px) 100vw, 1024px"
-              className="object-cover"
-            />
-          ) : (
-            <div className="flex size-full items-center justify-center text-sm text-muted-foreground">
-              Photography coming soon
-            </div>
-          )}
-          {photo?.photographer_name && (
-            <span className="absolute bottom-2 right-3 text-xs text-white/75 [text-shadow:0_1px_2px_rgba(0,0,0,0.6)]">
-              Photo:{" "}
-              <a
-                href={`${photo.photographer_url}?utm_source=luxe_roam&utm_medium=referral`}
-                target="_blank"
-                rel="noreferrer"
-                className="hover:underline"
-              >
-                {photo.photographer_name}
-              </a>{" "}
-              on{" "}
-              <a
-                href="https://unsplash.com/?utm_source=luxe_roam&utm_medium=referral"
-                target="_blank"
-                rel="noreferrer"
-                className="hover:underline"
-              >
-                Unsplash
-              </a>
-            </span>
-          )}
-        </div>
+        <PlaceGallery photos={place.place_photos} name={place.name} />
 
-        {place.blurb && (
-          <section className="flex flex-col gap-3 border-t border-border py-10">
-            <h2 className="text-base font-semibold">About {place.name}</h2>
-            <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
-              {place.blurb}. Part of our {place.region} collection —{" "}
-              {place.region_tagline.toLowerCase()}.
-            </p>
-          </section>
-        )}
-
-        {trips.length > 0 && (
-          <section className="flex flex-col gap-4 border-t border-border py-10">
-            <h2 className="text-base font-semibold">
-              Trips that include {place.name}
+        <section className="flex flex-col gap-4 border-t border-border py-10">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-lg font-semibold">
+              {place.name} in {place.region}
             </h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {trips.map((trip) => (
-                <Link
-                  key={trip.id}
-                  href={`/${trip.type}`}
-                  className="flex flex-col gap-2 rounded-2xl border border-border p-5 hover:bg-muted"
-                >
-                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {trip.type}
-                  </span>
-                  <span className="font-semibold">{trip.title}</span>
-                  {trip.duration && (
-                    <span className="text-sm text-muted-foreground">
-                      {trip.duration}
-                    </span>
-                  )}
-                  {trip.price_from !== null && (
-                    <span className="text-sm">
-                      <span className="text-muted-foreground">From</span>{" "}
-                      <span className="font-semibold">
-                        <Price amount={Number(trip.price_from)} />
-                      </span>{" "}
-                      <span className="text-muted-foreground">per person</span>
-                    </span>
-                  )}
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
+            <p className="text-sm text-muted-foreground">
+              {place.region_tagline}
+            </p>
+          </div>
+          {place.blurb && (
+            <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
+              {place.blurb}.
+            </p>
+          )}
+
+          <div className="grid grid-cols-1 gap-4 pt-2 sm:grid-cols-3">
+            <Highlight
+              icon={Compass}
+              title="Privately guided"
+              body="Your own guide and vehicle, never a shared group departure."
+            />
+            <Highlight
+              icon={CalendarCheck}
+              title="Built around your dates"
+              body="Every itinerary is re-planned around when you can travel."
+            />
+            <Highlight
+              icon={ShieldCheck}
+              title="Fees included"
+              body="Park and conservation fees are covered in the trip price."
+            />
+          </div>
+        </section>
+
+        {/* The full itinerary detail for each trip that visits this place. */}
+        {packages.map((pkg) => (
+          <PackageSection key={pkg.id} pkg={pkg} />
+        ))}
+
+        <section className="flex flex-col gap-4 border-t border-border py-10">
+          <h2 className="text-lg font-semibold">Where you&apos;ll be</h2>
+          <div className="flex min-h-56 items-center justify-center rounded-2xl bg-muted">
+            <span className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Map className="size-4" />
+              {place.name}, {place.region}
+            </span>
+          </div>
+        </section>
+
+        <section className="flex flex-col gap-4 border-t border-border py-10">
+          <h2 className="text-lg font-semibold">Things to know</h2>
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
+            <Note
+              title="Booking"
+              lines={[
+                "Deposit secures your dates",
+                "Balance due before departure",
+                "Itineraries tailored on request",
+              ]}
+            />
+            <Note
+              title="Cancellation"
+              lines={[
+                "Free changes up to 60 days out",
+                "Partial refund within 30 days",
+                "Travel insurance recommended",
+              ]}
+            />
+            <Note
+              title="Good to know"
+              lines={[
+                "Guides are private, not shared",
+                "Internal flights where listed",
+                "Children welcome on family trips",
+              ]}
+            />
+          </div>
+        </section>
 
         <ReviewsSection
           placeId={place.id}
@@ -199,6 +204,26 @@ export default async function PlacePage({ params }: PageProps) {
   );
 }
 
+function Highlight({
+  icon: Icon,
+  title,
+  body,
+}: {
+  icon: typeof Compass;
+  title: string;
+  body: string;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <Icon className="mt-0.5 size-5 shrink-0" />
+      <div className="flex flex-col gap-0.5">
+        <span className="text-sm font-medium">{title}</span>
+        <span className="text-sm text-muted-foreground">{body}</span>
+      </div>
+    </div>
+  );
+}
+
 function IconButton({
   icon: Icon,
   label,
@@ -214,5 +239,18 @@ function IconButton({
       <Icon className="size-4" />
       {label}
     </button>
+  );
+}
+
+function Note({ title, lines }: { title: string; lines: string[] }) {
+  return (
+    <div className="flex flex-col gap-2">
+      <h3 className="text-sm font-semibold">{title}</h3>
+      {lines.map((line) => (
+        <p key={line} className="text-sm text-muted-foreground">
+          {line}
+        </p>
+      ))}
+    </div>
   );
 }
