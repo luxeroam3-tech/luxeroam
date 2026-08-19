@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { I18nProvider } from "@/lib/i18n/context";
-import { FloatingNav } from "@/components/floating-nav";
-import { Footer } from "@/components/footer";
+import { SiteChrome } from "@/components/site-chrome";
 import { SITE_URL } from "./sitemap";
 import "./globals.css";
 
@@ -54,8 +53,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <I18nProvider>
           {children}
-          <Footer />
-          <FloatingNav />
+          <SiteChrome />
         </I18nProvider>
       </body>
     </html>
