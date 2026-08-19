@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { getRequestIdentity } from "@/lib/request-identity";
 
 export type ReviewFormState = {
   status: "idle" | "ok" | "error";
@@ -25,15 +26,19 @@ export async function submitReview(
     return { status: "error", message: "Pick a rating between 1 and 5 stars." };
   }
 
+  const { ipHash, userAgent } = await getRequestIdentity();
   const supabase = await createClient();
-  // status is left at its 'pending' default: the RLS policy only permits
-  // inserts in that state, so a submission cannot move the public average
-  // until it has been approved.
-  const { error } = await supabase.from("reviews").insert({
-    place_id: placeId,
-    author_name: authorName,
-    rating,
-    body: body || null,
+
+  // The rate limit and the insert happen inside one SECURITY DEFINER function
+  // so the cap cannot be bypassed by racing two submissions, and review counts
+  // are never exposed to the client.
+  const { data, error } = await supabase.rpc("submit_review", {
+    p_place_id: placeId,
+    p_author_name: authorName,
+    p_rating: rating,
+    p_body: body || null,
+    p_ip_hash: ipHash,
+    p_user_agent: userAgent,
   });
 
   if (error) {
@@ -41,6 +46,17 @@ export async function submitReview(
       status: "error",
       message: "Could not save that review. Try again.",
     };
+  }
+
+  if (data === "rate_limited") {
+    return {
+      status: "error",
+      message:
+        "That's a few reviews in a short time. Please try again in an hour.",
+    };
+  }
+  if (data !== "ok") {
+    return { status: "error", message: "That review couldn't be accepted." };
   }
 
   revalidatePath(path);

@@ -3,12 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin/auth";
+import { recordAudit } from "@/lib/admin/audit";
 
 const REVIEW_STATUSES = ["pending", "approved", "rejected"];
 const ENQUIRY_STATUSES = ["new", "contacted", "quoted", "booked", "closed"];
 
 export async function setReviewStatus(reviewId: string, status: string) {
-  await requireAdmin();
+  const admin = await requireAdmin();
   if (!REVIEW_STATUSES.includes(status)) {
     return { ok: false, message: "Unknown review status." };
   }
@@ -21,6 +22,13 @@ export async function setReviewStatus(reviewId: string, status: string) {
 
   if (error) return { ok: false, message: error.message };
 
+  await recordAudit({
+    actorEmail: admin.email,
+    action: `review.${status}`,
+    entity: "review",
+    entityId: reviewId,
+  });
+
   // The rollup trigger recomputes the place's rating, so the public pages
   // need revalidating too.
   revalidatePath("/admin/reviews");
@@ -30,12 +38,19 @@ export async function setReviewStatus(reviewId: string, status: string) {
 }
 
 export async function deleteReview(reviewId: string) {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const supabase = await createClient();
   const { error } = await supabase.from("reviews").delete().eq("id", reviewId);
 
   if (error) return { ok: false, message: error.message };
+
+  await recordAudit({
+    actorEmail: admin.email,
+    action: "review.deleted",
+    entity: "review",
+    entityId: reviewId,
+  });
 
   revalidatePath("/admin/reviews");
   revalidatePath("/", "layout");
@@ -43,7 +58,7 @@ export async function deleteReview(reviewId: string) {
 }
 
 export async function setEnquiryStatus(enquiryId: string, status: string) {
-  await requireAdmin();
+  const admin = await requireAdmin();
   if (!ENQUIRY_STATUSES.includes(status)) {
     return { ok: false, message: "Unknown enquiry status." };
   }
@@ -56,6 +71,13 @@ export async function setEnquiryStatus(enquiryId: string, status: string) {
 
   if (error) return { ok: false, message: error.message };
 
+  await recordAudit({
+    actorEmail: admin.email,
+    action: `enquiry.${status}`,
+    entity: "enquiry",
+    entityId: enquiryId,
+  });
+
   revalidatePath("/admin/enquiries");
   revalidatePath("/admin");
   return { ok: true, message: `Marked as ${status}.` };
@@ -65,7 +87,7 @@ export async function updatePlace(
   placeId: string,
   fields: { blurb?: string; price_from?: number | null },
 ) {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -74,6 +96,14 @@ export async function updatePlace(
     .eq("id", placeId);
 
   if (error) return { ok: false, message: error.message };
+
+  await recordAudit({
+    actorEmail: admin.email,
+    action: "place.updated",
+    entity: "place",
+    entityId: placeId,
+    detail: fields as Record<string, unknown>,
+  });
 
   revalidatePath("/admin/places");
   revalidatePath("/", "layout");

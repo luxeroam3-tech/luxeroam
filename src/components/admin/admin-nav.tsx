@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Star, Inbox, MapPin, LogOut } from "lucide-react";
+import {
+  LayoutDashboard,
+  Star,
+  Inbox,
+  MapPin,
+  Users,
+  LogOut,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 const LINKS = [
@@ -10,6 +17,7 @@ const LINKS = [
   { href: "/admin/reviews", label: "Reviews", icon: Star },
   { href: "/admin/enquiries", label: "Enquiries", icon: Inbox },
   { href: "/admin/places", label: "Places", icon: MapPin },
+  { href: "/admin/team", label: "Team", icon: Users },
 ];
 
 export function AdminNav() {
