@@ -17,6 +17,7 @@ import { PlaceGallery } from "@/components/destination/place-gallery";
 import { PackageSection } from "@/components/destination/package-section";
 import { ReviewsSection, Stars } from "@/components/reviews";
 import { AvailabilityList } from "@/components/destination/availability-list";
+import { recordEvent } from "@/lib/analytics";
 import {
   getDestination,
   getPackageTypes,
@@ -49,6 +50,12 @@ export default async function PlacePage({ params }: PageProps) {
   ]);
 
   if (!place || !region) notFound();
+
+  recordEvent({
+    type: "place_view",
+    placeSlug: place.slug,
+    regionSlug: place.region_slug,
+  });
 
   // Only the packages this place actually appears in.
   const packages = region.packages.filter((pkg) =>

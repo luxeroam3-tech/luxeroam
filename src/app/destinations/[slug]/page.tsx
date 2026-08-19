@@ -5,6 +5,7 @@ import { ChevronRight, Map } from "lucide-react";
 import { Header } from "@/components/header";
 import { DestinationRow } from "@/components/destination-row";
 import { PlaceCard } from "@/components/place-card";
+import { recordEvent } from "@/lib/analytics";
 import {
   getAllPlaces,
   getDestination,
@@ -37,6 +38,8 @@ export default async function RegionPage({ params }: PageProps) {
     ]);
 
   if (!region) notFound();
+
+  recordEvent({ type: "region_view", regionSlug: region.slug });
 
   const others = destinations.filter((item) => item.slug !== region.slug);
 

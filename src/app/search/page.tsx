@@ -10,6 +10,7 @@ import {
   getPackageTypesSafe,
   searchPlaces,
 } from "@/lib/data";
+import { recordEvent } from "@/lib/analytics";
 
 export const metadata: Metadata = { title: "Search" };
 
@@ -31,6 +32,15 @@ export default async function SearchPage({ searchParams }: PageProps) {
     getPackageTypesSafe(),
     getAllPlacesSafe(),
   ]);
+
+  // Logged even when nothing matches - a search with no results is the most
+  // useful signal in here, since it says which regions to add next.
+  recordEvent({
+    type: "search",
+    query: where,
+    tripType: type,
+    resultCount: results.length,
+  });
 
   const dateLabel =
     from && to

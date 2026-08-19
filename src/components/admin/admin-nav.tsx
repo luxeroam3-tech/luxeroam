@@ -8,6 +8,7 @@ import {
   Inbox,
   MapPin,
   Users,
+  BarChart3,
   LogOut,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -17,6 +18,7 @@ const LINKS = [
   { href: "/admin/reviews", label: "Reviews", icon: Star },
   { href: "/admin/enquiries", label: "Enquiries", icon: Inbox },
   { href: "/admin/places", label: "Places", icon: MapPin },
+  { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/admin/team", label: "Team", icon: Users },
 ];
 
