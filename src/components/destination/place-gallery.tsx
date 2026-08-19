@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { photoSrc } from "@/lib/photo-url";
 import { Grid3x3 } from "lucide-react";
 import type { PlacePhoto } from "@/lib/data";
 
@@ -98,7 +99,7 @@ function Tile({
   return (
     <div className="relative aspect-[4/3] w-full overflow-hidden">
       <Image
-        src={`${photo.url}&w=1200&h=900&q=80&fm=jpg&fit=crop`}
+        src={photoSrc(photo.url, { w: 1200, h: 900, q: 80 })}
         alt={photo.alt ?? name}
         fill
         priority={priority}

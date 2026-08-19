@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { photoSrc } from "@/lib/photo-url";
 import Link from "next/link";
 import { Star } from "lucide-react";
 import { Price } from "@/components/price";
@@ -69,7 +70,7 @@ export function PlaceCard({ place }: { place: Place }) {
       <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-muted">
         {photo ? (
           <Image
-            src={`${photo.url}&w=600&h=600&q=75&fm=jpg&fit=crop`}
+            src={photoSrc(photo.url, { w: 600, h: 600 })}
             alt={photo.alt ?? place.name}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1280px) 33vw, 25vw"

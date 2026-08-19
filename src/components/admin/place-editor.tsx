@@ -2,7 +2,8 @@
 
 import { useActionState, useState, useTransition } from "react";
 import Image from "next/image";
-import { Search, Star, Trash2, X } from "lucide-react";
+import { photoSrc } from "@/lib/photo-url";
+import { Search, Star, Trash2, X, Upload } from "lucide-react";
 import { updatePlace } from "@/app/actions/admin";
 import { AvailabilityEditor } from "@/components/admin/availability-editor";
 import type { Availability } from "@/lib/data";
@@ -11,8 +12,10 @@ import {
   attachPhoto,
   removePhoto,
   makePrimaryPhoto,
+  uploadPlacePhoto,
   type UnsplashSearchState,
   type UnsplashResult,
+  type UploadState,
 } from "@/app/actions/admin-photos";
 
 const INITIAL_SEARCH: UnsplashSearchState = {
@@ -21,6 +24,8 @@ const INITIAL_SEARCH: UnsplashSearchState = {
   results: [],
   remaining: null,
 };
+
+const INITIAL_UPLOAD: UploadState = { status: "idle", message: "" };
 
 export type EditablePlace = {
   id: string;
@@ -46,6 +51,10 @@ export function PlaceEditor({
   const [search, searchAction, searching] = useActionState(
     searchUnsplash,
     INITIAL_SEARCH,
+  );
+  const [upload, uploadAction, uploading] = useActionState(
+    uploadPlacePhoto,
+    INITIAL_UPLOAD,
   );
 
   function run(action: () => Promise<{ ok: boolean; message: string }>) {
@@ -130,7 +139,7 @@ export function PlaceEditor({
                   <li key={photo.id} className="flex flex-col gap-1">
                     <div className="relative aspect-square overflow-hidden rounded-lg bg-muted">
                       <Image
-                        src={`${photo.url}&w=200&h=200&q=70&fm=jpg&fit=crop`}
+                        src={photoSrc(photo.url, { w: 200, h: 200, q: 70 })}
                         alt=""
                         fill
                         sizes="120px"
@@ -170,6 +179,55 @@ export function PlaceEditor({
                 ))}
               </ul>
             )}
+
+            <form
+              action={uploadAction}
+              className="flex flex-col gap-2 rounded-lg border border-dashed border-border p-3"
+            >
+              <input type="hidden" name="place_id" value={place.id} />
+              <span className="text-xs font-medium">
+                Upload from this device
+              </span>
+              <input
+                type="file"
+                name="file"
+                accept="image/jpeg,image/png,image/webp,image/avif"
+                required
+                className="text-xs file:mr-3 file:rounded-full file:border file:border-border file:bg-transparent file:px-3 file:py-1.5 file:text-xs file:font-medium"
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  name="alt"
+                  placeholder="Alt text (accessibility)"
+                  className="rounded-lg border border-border px-3 py-2 text-xs outline-none focus:border-foreground"
+                />
+                <input
+                  name="credit"
+                  placeholder="Credit (optional)"
+                  className="rounded-lg border border-border px-3 py-2 text-xs outline-none focus:border-foreground"
+                />
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  type="submit"
+                  disabled={uploading}
+                  className="flex w-fit items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
+                >
+                  <Upload className="size-4" />
+                  {uploading ? "Uploading…" : "Upload"}
+                </button>
+                <span className="text-xs text-muted-foreground">
+                  JPEG, PNG, WebP or AVIF · up to 10MB
+                </span>
+              </div>
+              {upload.message && (
+                <span
+                  className={`text-xs ${upload.status === "error" ? "text-red-600" : "text-muted-foreground"}`}
+                >
+                  {upload.message}
+                </span>
+              )}
+            </form>
 
             <form action={searchAction} className="flex flex-col gap-2">
               <div className="flex gap-2">

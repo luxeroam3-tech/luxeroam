@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { photoSrc } from "@/lib/photo-url";
 import Link from "next/link";
 import { ImageOff, Pencil } from "lucide-react";
 import { PlaceEditor } from "@/components/admin/place-editor";
@@ -30,7 +31,7 @@ export function PlacesTable({
               <div className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-muted">
                 {photo ? (
                   <Image
-                    src={`${photo.url}&w=112&h=112&q=70&fm=jpg&fit=crop`}
+                    src={photoSrc(photo.url, { w: 112, h: 112, q: 70 })}
                     alt=""
                     fill
                     sizes="56px"
