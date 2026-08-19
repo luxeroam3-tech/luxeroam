@@ -109,3 +109,51 @@ export async function updatePlace(
   revalidatePath("/", "layout");
   return { ok: true, message: "Place updated." };
 }
+
+export async function addEnquiryNote(enquiryId: string, body: string) {
+  const admin = await requireAdmin();
+
+  const trimmed = body.trim();
+  if (!trimmed) return { ok: false, message: "Write something first." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("enquiry_notes").insert({
+    enquiry_id: enquiryId,
+    author_email: admin.email,
+    body: trimmed.slice(0, 2000),
+  });
+
+  if (error) return { ok: false, message: error.message };
+
+  await recordAudit({
+    actorEmail: admin.email,
+    action: "enquiry.note_added",
+    entity: "enquiry",
+    entityId: enquiryId,
+  });
+
+  revalidatePath("/admin/enquiries");
+  return { ok: true, message: "Note saved." };
+}
+
+export async function deleteEnquiryNote(noteId: string, enquiryId: string) {
+  const admin = await requireAdmin();
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("enquiry_notes")
+    .delete()
+    .eq("id", noteId);
+
+  if (error) return { ok: false, message: error.message };
+
+  await recordAudit({
+    actorEmail: admin.email,
+    action: "enquiry.note_deleted",
+    entity: "enquiry",
+    entityId: enquiryId,
+  });
+
+  revalidatePath("/admin/enquiries");
+  return { ok: true, message: "Note deleted." };
+}

@@ -27,6 +27,12 @@ export type AdminEnquiry = {
   message: string;
   status: string;
   created_at: string;
+  enquiry_notes: {
+    id: string;
+    author_email: string;
+    body: string;
+    created_at: string;
+  }[];
 };
 
 export type AdminPlace = {
@@ -75,14 +81,20 @@ export async function getEnquiries(status?: string): Promise<AdminEnquiry[]> {
   const supabase = await createClient();
   let query = supabase
     .from("enquiries")
-    .select("*")
+    .select("*, enquiry_notes(id, author_email, body, created_at)")
     .order("created_at", { ascending: false });
 
   if (status) query = query.eq("status", status);
 
   const { data, error } = await query;
   if (error) throw error;
-  return (data ?? []) as AdminEnquiry[];
+
+  return ((data ?? []) as unknown as AdminEnquiry[]).map((enquiry) => ({
+    ...enquiry,
+    enquiry_notes: (enquiry.enquiry_notes ?? [])
+      .slice()
+      .sort((a, b) => b.created_at.localeCompare(a.created_at)),
+  }));
 }
 
 export async function getPlacesForAdmin(): Promise<AdminPlace[]> {

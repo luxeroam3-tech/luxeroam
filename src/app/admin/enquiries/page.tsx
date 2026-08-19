@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Download } from "lucide-react";
 import { requireAdmin } from "@/lib/admin/auth";
 import { getEnquiries } from "@/lib/admin/data";
 import { EnquiryRow } from "@/components/admin/enquiry-row";
@@ -24,11 +25,20 @@ export default async function AdminEnquiriesPage({ searchParams }: PageProps) {
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-8">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Enquiries</h1>
-        <p className="text-sm text-muted-foreground">
-          Every enquiry submitted from the contact form.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-semibold tracking-tight">Enquiries</h1>
+          <p className="text-sm text-muted-foreground">
+            Every enquiry submitted from the contact form.
+          </p>
+        </div>
+        <a
+          href="/admin/enquiries/export"
+          className="flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium hover:bg-muted"
+        >
+          <Download className="size-4" />
+          Export CSV
+        </a>
       </div>
 
       <div className="flex flex-wrap gap-2">
