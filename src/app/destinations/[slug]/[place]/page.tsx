@@ -16,6 +16,7 @@ import { DestinationRow } from "@/components/destination-row";
 import { PlaceGallery } from "@/components/destination/place-gallery";
 import { PackageSection } from "@/components/destination/package-section";
 import { ReviewsSection, Stars } from "@/components/reviews";
+import { AvailabilityList } from "@/components/destination/availability-list";
 import {
   getDestination,
   getPackageTypes,
@@ -141,6 +142,11 @@ export default async function PlacePage({ params }: PageProps) {
         {packages.map((pkg) => (
           <PackageSection key={pkg.id} pkg={pkg} />
         ))}
+
+        <AvailabilityList
+          windows={place.place_availability}
+          placeName={place.name}
+        />
 
         <section className="flex flex-col items-start gap-3 rounded-2xl bg-muted p-6">
           <h2 className="text-lg font-semibold">Interested in {place.name}?</h2>

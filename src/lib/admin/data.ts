@@ -34,11 +34,25 @@ export type AdminPlace = {
   slug: string;
   name: string;
   blurb: string | null;
+  photo_query: string | null;
   rating: number | null;
   review_count: number | null;
   price_from: number | null;
   destinations: { region: string; slug: string } | null;
-  place_photos: { id: string }[];
+  place_photos: {
+    id: string;
+    url: string;
+    photographer_name: string | null;
+    sort_order: number;
+  }[];
+  place_availability: {
+    id: string;
+    starts_on: string;
+    ends_on: string;
+    trip_type: string | null;
+    seats: number | null;
+    note: string | null;
+  }[];
 };
 
 export async function getReviews(status?: string): Promise<AdminReview[]> {
@@ -76,12 +90,22 @@ export async function getPlacesForAdmin(): Promise<AdminPlace[]> {
   const { data, error } = await supabase
     .from("places")
     .select(
-      "id, slug, name, blurb, rating, review_count, price_from, destinations(region, slug), place_photos(id)",
+      "id, slug, name, blurb, photo_query, rating, review_count, price_from, destinations(region, slug), place_photos(id, url, photographer_name, sort_order), place_availability(id, starts_on, ends_on, trip_type, seats, note)",
     )
     .order("sort_order");
 
   if (error) throw error;
-  return (data ?? []) as unknown as AdminPlace[];
+
+  // Photos come back unordered; the primary one is the lowest sort_order.
+  return ((data ?? []) as unknown as AdminPlace[]).map((place) => ({
+    ...place,
+    place_photos: place.place_photos
+      .slice()
+      .sort((a, b) => a.sort_order - b.sort_order),
+    place_availability: (place.place_availability ?? [])
+      .slice()
+      .sort((a, b) => a.starts_on.localeCompare(b.starts_on)),
+  }));
 }
 
 export type AdminStats = {

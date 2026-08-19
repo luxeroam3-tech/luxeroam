@@ -14,20 +14,31 @@ import {
 export const metadata: Metadata = { title: "Search" };
 
 type PageProps = {
-  searchParams: Promise<{ where?: string; type?: string; when?: string }>;
+  searchParams: Promise<{
+    where?: string;
+    type?: string;
+    from?: string;
+    to?: string;
+  }>;
 };
 
 export default async function SearchPage({ searchParams }: PageProps) {
-  const { where, type, when } = await searchParams;
+  const { where, type, from, to } = await searchParams;
 
   const [results, destinations, packageTypes, allPlaces] = await Promise.all([
-    searchPlaces({ where, type }),
+    searchPlaces({ where, type, from, to }),
     getDestinationsSafe(),
     getPackageTypesSafe(),
     getAllPlacesSafe(),
   ]);
 
-  const criteria = [where, type, when].filter(Boolean);
+  const dateLabel =
+    from && to
+      ? from === to
+        ? new Date(`${from}T00:00:00`).toLocaleDateString()
+        : `${new Date(`${from}T00:00:00`).toLocaleDateString()} – ${new Date(`${to}T00:00:00`).toLocaleDateString()}`
+      : undefined;
+  const criteria = [where, type, dateLabel].filter(Boolean);
 
   return (
     <main className="flex flex-1 flex-col pb-28">

@@ -105,7 +105,15 @@ export function SearchBar({ packageTypes }: SearchBarProps) {
     const params = new URLSearchParams();
     if (destination.trim()) params.set("where", destination.trim());
     if (tripType) params.set("type", tripType);
-    if (date) params.set("when", formatDate(date));
+    if (date) {
+      // ISO date so the server can compare it against availability windows;
+      // the previous display string could not be compared to anything.
+      const iso = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 10);
+      params.set("from", iso);
+      params.set("to", iso);
+    }
     setPanel(null);
     setMobileOpen(false);
     router.push(`/search?${params.toString()}`);

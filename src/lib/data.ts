@@ -49,6 +49,15 @@ export type PlacePhoto = {
   photographer_url: string | null;
 };
 
+export type Availability = {
+  id: string;
+  starts_on: string;
+  ends_on: string;
+  trip_type: string | null;
+  seats: number | null;
+  note: string | null;
+};
+
 export type Place = {
   slug: string;
   name: string;
@@ -60,10 +69,11 @@ export type Place = {
   region: string;
   region_slug: string;
   place_photos: PlacePhoto[];
+  place_availability: Availability[];
 };
 
 const PLACE_FIELDS =
-  "slug, name, blurb, package_types, rating, review_count, price_from, sort_order, place_photos(url, alt, photographer_name, photographer_url, sort_order)";
+  "slug, name, blurb, package_types, rating, review_count, price_from, sort_order, place_photos(url, alt, photographer_name, photographer_url, sort_order), place_availability(id, starts_on, ends_on, trip_type, seats, note)";
 
 type RawRegion = {
   slug: string;
@@ -96,6 +106,9 @@ function flatten(region: RawRegion, typeFilter?: string): Place[] {
       region: region.region,
       region_slug: region.slug,
       price_from: place.price_from === null ? floor : Number(place.price_from),
+      place_availability: (place.place_availability ?? [])
+        .slice()
+        .sort((a, b) => a.starts_on.localeCompare(b.starts_on)),
     }));
 }
 
@@ -138,7 +151,31 @@ export async function getAllPlaces(typeFilter?: string): Promise<Place[]> {
 export type SearchParams = {
   where?: string;
   type?: string;
+  from?: string;
+  to?: string;
 };
+
+/**
+ * A place matches a requested range when any of its windows overlaps it.
+ * Overlap, not containment: a window of 19-30 Aug answers a search for the
+ * 22nd-25th and one for the 15th-20th alike.
+ */
+export function isAvailableBetween(
+  place: Place,
+  from?: string,
+  to?: string,
+): boolean {
+  if (!from && !to) return true;
+  const windows = place.place_availability ?? [];
+  if (windows.length === 0) return false;
+
+  const start = from || to!;
+  const end = to || from!;
+
+  return windows.some(
+    (window) => window.starts_on <= end && window.ends_on >= start,
+  );
+}
 
 /**
  * Free-text search over places. Matches the place name, its blurb, and the
@@ -147,17 +184,20 @@ export type SearchParams = {
 export async function searchPlaces({
   where,
   type,
+  from,
+  to,
 }: SearchParams): Promise<Place[]> {
   const all = await getAllPlaces(type);
   const term = where?.trim().toLowerCase();
-  if (!term) return all;
 
-  return all.filter((place) =>
-    [place.name, place.blurb ?? "", place.region]
+  return all.filter((place) => {
+    if (!isAvailableBetween(place, from, to)) return false;
+    if (!term) return true;
+    return [place.name, place.blurb ?? "", place.region]
       .join(" ")
       .toLowerCase()
-      .includes(term),
-  );
+      .includes(term);
+  });
 }
 
 export type Suggestion = {
