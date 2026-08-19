@@ -1,0 +1,13 @@
+-- is_admin() must stay executable by both roles, unlike the other three.
+--
+-- RLS policy expressions run with the querying role's privileges:
+--   * without the `authenticated` grant, every admin query failed with
+--     "permission denied for function is_admin" - admins were locked out.
+--   * without the `anon` grant, the PUBLIC site broke. The reviews table has
+--     both a public policy (status = 'approved') and an admin policy
+--     (is_admin()); Postgres evaluates every permissive policy and ORs them,
+--     so anonymous reads call is_admin() too and every place page 500'd.
+--
+-- The advisor warning on this function is accepted: it takes no arguments and
+-- reports only whether the caller themselves is an admin.
+grant execute on function public.is_admin() to anon, authenticated;

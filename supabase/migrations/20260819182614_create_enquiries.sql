@@ -4,7 +4,6 @@ create table enquiries (
   name text not null,
   email text not null,
   phone text,
-  -- Optional context when the enquiry starts from a destination page.
   destination_slug text,
   trip_type package_type,
   travel_dates text,
@@ -25,5 +24,4 @@ create policy "Public submit enquiries" on enquiries
   for insert with check (status = 'new');
 
 -- Deliberately no public select policy: enquiries contain personal contact
--- details and must not be readable with the anon key. Reading them requires
--- an authenticated admin, added with the admin dashboard.
+-- details. Reading them requires an admin (see the admin policies migration).
