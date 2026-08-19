@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -14,7 +14,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import type { DestinationSummary } from "@/lib/data";
 
 const NAV_ICONS: Record<string, string> = {
   honeymoon: "/icons/honeymoon.png",
@@ -22,41 +21,43 @@ const NAV_ICONS: Record<string, string> = {
 };
 
 type HeaderProps = {
-  destinations: DestinationSummary[];
   packageTypes: string[];
 };
 
-export function Header({ destinations, packageTypes }: HeaderProps) {
+export function Header({ packageTypes }: HeaderProps) {
   const { t } = useI18n();
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const scrolledRef = useRef(scrolled);
-  scrolledRef.current = scrolled;
-
   useEffect(() => {
     let ticking = false;
     let lastY = window.scrollY;
+    // Tracked locally rather than through a ref written during render, which
+    // React forbids. setScrolled's updater form gives us the current value.
+    let isCollapsed = false;
 
     function update() {
       const y = window.scrollY;
       const delta = y - lastY;
 
+      function apply(next: boolean) {
+        if (isCollapsed === next) return;
+        isCollapsed = next;
+        setScrolled(next);
+      }
+
       // Direction-driven: collapse when scrolling down past the header, expand
       // as soon as the user scrolls back up. The 6px deadzone keeps trackpad
       // and momentum jitter from flipping the state.
       if (Math.abs(delta) > 6) {
-        if (delta > 0 && y > 80 && !scrolledRef.current) {
-          setScrolled(true);
-        } else if (delta < 0 && scrolledRef.current) {
-          setScrolled(false);
-        }
+        if (delta > 0 && y > 80) apply(true);
+        else if (delta < 0) apply(false);
         lastY = y;
       }
 
       // Always expanded at the very top, regardless of direction.
-      if (y <= 80 && scrolledRef.current) setScrolled(false);
+      if (y <= 80) apply(false);
 
       ticking = false;
     }
@@ -73,8 +74,8 @@ export function Header({ destinations, packageTypes }: HeaderProps) {
   }, []);
 
   const menuLinks = [
-    { label: t("menu.about"), href: "#" },
-    { label: t("menu.contact"), href: "#" },
+    { label: t("menu.about"), href: "/about" },
+    { label: t("menu.contact"), href: "/contact" },
   ];
 
   return (
@@ -162,7 +163,7 @@ export function Header({ destinations, packageTypes }: HeaderProps) {
 
         {/* Always present - this is the one thing that survives the collapse. */}
         <div className="flex justify-center pb-4">
-          <SearchBar destinations={destinations} packageTypes={packageTypes} />
+          <SearchBar packageTypes={packageTypes} />
         </div>
 
         <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
@@ -172,14 +173,14 @@ export function Header({ destinations, packageTypes }: HeaderProps) {
             </SheetHeader>
             <nav className="flex flex-col px-4">
               {menuLinks.map(({ label, href }) => (
-                <a
+                <Link
                   key={label}
                   href={href}
                   onClick={() => setMenuOpen(false)}
                   className="rounded-lg px-2 py-3 text-sm font-medium hover:bg-muted"
                 >
                   {label}
-                </a>
+                </Link>
               ))}
             </nav>
           </SheetContent>

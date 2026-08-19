@@ -1,8 +1,8 @@
 import { DestinationRow } from "@/components/destination-row";
-import { getAllPlaces } from "@/lib/data";
+import { getAllPlacesSafe } from "@/lib/data";
 
 export async function FeaturedDestinations() {
-  const places = await getAllPlaces();
+  const places = await getAllPlacesSafe();
 
   return (
     <DestinationRow

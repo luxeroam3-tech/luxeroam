@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { CollectionPage } from "@/components/collection-page";
-import { getDestinations, getPackageTypes } from "@/lib/data";
+import { getDestinationsSafe, getPackageTypesSafe } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "Honeymoons",
@@ -10,8 +10,8 @@ export const metadata: Metadata = {
 
 export default async function HoneymoonPage() {
   const [destinations, packageTypes] = await Promise.all([
-    getDestinations(),
-    getPackageTypes(),
+    getDestinationsSafe(),
+    getPackageTypesSafe(),
   ]);
 
   return (

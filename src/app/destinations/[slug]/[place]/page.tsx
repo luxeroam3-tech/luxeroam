@@ -18,7 +18,6 @@ import { PackageSection } from "@/components/destination/package-section";
 import { ReviewsSection, Stars } from "@/components/reviews";
 import {
   getDestination,
-  getDestinations,
   getPackageTypes,
   getPlace,
   getPlaces,
@@ -41,14 +40,12 @@ export async function generateMetadata({
 
 export default async function PlacePage({ params }: PageProps) {
   const { slug, place: placeSlug } = await params;
-  const [place, region, destinations, packageTypes, siblings] =
-    await Promise.all([
-      getPlace(slug, placeSlug),
-      getDestination(slug),
-      getDestinations(),
-      getPackageTypes(),
-      getPlaces(slug),
-    ]);
+  const [place, region, packageTypes, siblings] = await Promise.all([
+    getPlace(slug, placeSlug),
+    getDestination(slug),
+    getPackageTypes(),
+    getPlaces(slug),
+  ]);
 
   if (!place || !region) notFound();
 
@@ -60,7 +57,7 @@ export default async function PlacePage({ params }: PageProps) {
 
   return (
     <main className="flex flex-1 flex-col pb-28">
-      <Header destinations={destinations} packageTypes={packageTypes} />
+      <Header packageTypes={packageTypes} />
 
       <div className="mx-auto flex w-full max-w-5xl flex-col px-6 pt-8">
         <nav className="flex items-center gap-1 pb-4 text-sm text-muted-foreground">
@@ -144,6 +141,20 @@ export default async function PlacePage({ params }: PageProps) {
         {packages.map((pkg) => (
           <PackageSection key={pkg.id} pkg={pkg} />
         ))}
+
+        <section className="flex flex-col items-start gap-3 rounded-2xl bg-muted p-6">
+          <h2 className="text-lg font-semibold">Interested in {place.name}?</h2>
+          <p className="max-w-2xl text-sm text-muted-foreground">
+            Tell us your dates and we&apos;ll build an itinerary around them. A
+            real person replies within one working day.
+          </p>
+          <Link
+            href={`/contact?destination=${place.region_slug}`}
+            className="rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/80"
+          >
+            Enquire about this trip
+          </Link>
+        </section>
 
         <section className="flex flex-col gap-4 border-t border-border py-10">
           <h2 className="text-lg font-semibold">Where you&apos;ll be</h2>

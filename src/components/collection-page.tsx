@@ -1,7 +1,7 @@
 import { Header } from "@/components/header";
 import { DestinationRow } from "@/components/destination-row";
 import { PlaceCard } from "@/components/place-card";
-import { getAllPlaces } from "@/lib/data";
+import { getAllPlacesSafe } from "@/lib/data";
 import type { DestinationSummary } from "@/lib/data";
 
 type CollectionPageProps = {
@@ -23,14 +23,14 @@ export async function CollectionPage({
   destinations,
   packageTypes,
 }: CollectionPageProps) {
-  const places = await getAllPlaces(packageType);
+  const places = await getAllPlacesSafe(packageType);
   const regionsWithPlaces = destinations.filter((destination) =>
     places.some((place) => place.region_slug === destination.slug),
   );
 
   return (
     <main className="flex flex-1 flex-col pb-28">
-      <Header destinations={destinations} packageTypes={packageTypes} />
+      <Header packageTypes={packageTypes} />
 
       <section className="flex flex-col gap-5 px-6 pt-8">
         <div className="flex flex-col gap-1">

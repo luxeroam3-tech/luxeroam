@@ -59,6 +59,11 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const [rates, setRates] = useState<Record<string, number> | null>(null);
   const [ratesLoading, setRatesLoading] = useState(true);
 
+  // Locale and currency are detected from localStorage and navigator, neither
+  // of which exists during SSR. Reading them in an effect and then setting
+  // state is intentional: initialising from them directly would produce markup
+  // that differs between server and client and break hydration.
+  /* eslint-disable react-hooks/set-state-in-effect -- see comment above */
   useEffect(() => {
     const savedLocale = localStorage.getItem(
       LOCALE_STORAGE_KEY,
@@ -86,6 +91,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       })
       .finally(() => setRatesLoading(false));
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   function setLocale(next: LocaleCode) {
     setLocaleState(next);
@@ -125,7 +131,6 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       formatPrice,
       ratesLoading,
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locale, currency, rates, ratesLoading]);
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;

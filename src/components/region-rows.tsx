@@ -1,5 +1,5 @@
 import { DestinationRow } from "@/components/destination-row";
-import { getAllPlaces } from "@/lib/data";
+import { getAllPlacesSafe } from "@/lib/data";
 import type { DestinationSummary } from "@/lib/data";
 
 type RegionRowsProps = {
@@ -7,7 +7,7 @@ type RegionRowsProps = {
 };
 
 export async function RegionRows({ destinations }: RegionRowsProps) {
-  const places = await getAllPlaces();
+  const places = await getAllPlacesSafe();
 
   return (
     <>

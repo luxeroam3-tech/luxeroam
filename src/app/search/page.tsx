@@ -5,9 +5,9 @@ import { Header } from "@/components/header";
 import { PlaceCard } from "@/components/place-card";
 import { DestinationRow } from "@/components/destination-row";
 import {
-  getAllPlaces,
-  getDestinations,
-  getPackageTypes,
+  getAllPlacesSafe,
+  getDestinationsSafe,
+  getPackageTypesSafe,
   searchPlaces,
 } from "@/lib/data";
 
@@ -22,16 +22,16 @@ export default async function SearchPage({ searchParams }: PageProps) {
 
   const [results, destinations, packageTypes, allPlaces] = await Promise.all([
     searchPlaces({ where, type }),
-    getDestinations(),
-    getPackageTypes(),
-    getAllPlaces(),
+    getDestinationsSafe(),
+    getPackageTypesSafe(),
+    getAllPlacesSafe(),
   ]);
 
   const criteria = [where, type, when].filter(Boolean);
 
   return (
     <main className="flex flex-1 flex-col pb-28">
-      <Header destinations={destinations} packageTypes={packageTypes} />
+      <Header packageTypes={packageTypes} />
 
       <section className="flex flex-col gap-5 px-6 pt-8">
         <div className="flex flex-col gap-1">

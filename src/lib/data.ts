@@ -17,6 +17,31 @@ export async function getDestinations(): Promise<DestinationSummary[]> {
   return data ?? [];
 }
 
+/**
+ * Chrome (header nav, trip-type tabs) should not take a page down when the
+ * database is unreachable — a paused project would otherwise 500 every route,
+ * including the contact page people need when something is wrong.
+ */
+export async function getDestinationsSafe(): Promise<DestinationSummary[]> {
+  try {
+    return await getDestinations();
+  } catch (error) {
+    console.error("getDestinations failed, falling back to empty nav", error);
+    return [];
+  }
+}
+
+const FALLBACK_PACKAGE_TYPES = ["honeymoon", "family"];
+
+export async function getPackageTypesSafe(): Promise<string[]> {
+  try {
+    return await getPackageTypes();
+  } catch (error) {
+    console.error("getPackageTypes failed, using defaults", error);
+    return FALLBACK_PACKAGE_TYPES;
+  }
+}
+
 export type PlacePhoto = {
   url: string;
   alt: string | null;
@@ -244,6 +269,16 @@ export async function getPlace(
     region_tagline: region.tagline,
     reviews,
   };
+}
+
+/** Listing data that should degrade to an empty grid rather than a crash. */
+export async function getAllPlacesSafe(typeFilter?: string): Promise<Place[]> {
+  try {
+    return await getAllPlaces(typeFilter);
+  } catch (error) {
+    console.error("getAllPlaces failed, rendering empty listing", error);
+    return [];
+  }
 }
 
 export type PackageDetail = {

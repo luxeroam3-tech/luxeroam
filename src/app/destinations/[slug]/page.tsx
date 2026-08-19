@@ -42,7 +42,7 @@ export default async function RegionPage({ params }: PageProps) {
 
   return (
     <main className="flex flex-1 flex-col pb-28">
-      <Header destinations={destinations} packageTypes={packageTypes} />
+      <Header packageTypes={packageTypes} />
 
       <section className="flex flex-col gap-5 px-6 pt-8">
         <nav className="flex items-center gap-1 text-sm text-muted-foreground">

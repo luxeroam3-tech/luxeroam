@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sheet";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/context";
-import type { DestinationSummary, Suggestion } from "@/lib/data";
+import type { Suggestion } from "@/lib/data";
 
 type Panel = "where" | "when" | "type" | null;
 
@@ -38,7 +38,6 @@ export function tripTypeLabel(type: string) {
 }
 
 type SearchBarProps = {
-  destinations: DestinationSummary[];
   packageTypes: string[];
 };
 
@@ -55,7 +54,7 @@ function buildMonthGrid(year: number, month: number) {
   return cells;
 }
 
-export function SearchBar({ destinations, packageTypes }: SearchBarProps) {
+export function SearchBar({ packageTypes }: SearchBarProps) {
   const { t, locale } = useI18n();
   const [panel, setPanel] = useState<Panel>(null);
   const [mobileOpen, setMobileOpen] = useState(false);

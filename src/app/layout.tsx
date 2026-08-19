@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { I18nProvider } from "@/lib/i18n/context";
 import { FloatingNav } from "@/components/floating-nav";
+import { Footer } from "@/components/footer";
+import { SITE_URL } from "./sitemap";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,13 +16,29 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const description =
+  "Curated honeymoon and family travel across Kenya, East Africa, Europe, the USA, Asia, and Australia.";
+
 export const metadata: Metadata = {
+  // Required for Open Graph and canonical URLs to resolve to absolute paths.
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Luxe Roam | Luxury Safaris & Curated Travel",
     template: "%s | Luxe Roam",
   },
-  description:
-    "Curated honeymoon and family travel across Kenya, East Africa, Europe, the USA, Asia, and Australia.",
+  description,
+  openGraph: {
+    type: "website",
+    siteName: "Luxe Roam",
+    title: "Luxe Roam | Luxury Safaris & Curated Travel",
+    description,
+    url: SITE_URL,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Luxe Roam | Luxury Safaris & Curated Travel",
+    description,
+  },
 };
 
 export default function RootLayout({
@@ -36,6 +54,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <I18nProvider>
           {children}
+          <Footer />
           <FloatingNav />
         </I18nProvider>
       </body>
