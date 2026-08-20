@@ -211,9 +211,11 @@ export function SearchBar({ packageTypes }: SearchBarProps) {
       <button
         type="button"
         onClick={() => {
+          // Fill the field and move on to the next step. Navigating straight to
+          // the destination page here skipped the rest of the search - the
+          // trip type and dates the visitor was about to choose were lost.
           setDestination(suggestion.value);
-          setPanel(null);
-          router.push(suggestion.href);
+          setPanel("when");
         }}
         className="flex items-center gap-3 rounded-lg p-2.5 text-left hover:bg-muted"
       >

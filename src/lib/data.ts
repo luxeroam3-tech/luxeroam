@@ -156,18 +156,30 @@ export type SearchParams = {
 };
 
 /**
- * A place matches a requested range when any of its windows overlaps it.
- * Overlap, not containment: a window of 19-30 Aug answers a search for the
- * 22nd-25th and one for the 15th-20th alike.
+ * Date matching.
+ *
+ * A place with published windows must overlap the requested range. A place with
+ * NO published windows is still a match: this is a bespoke operator that plans
+ * around the traveller's dates, so an empty schedule means "on request", not
+ * "unavailable". Treating it as unavailable hid 70 of 71 places from every
+ * date search.
+ *
+ * Overlap, not containment: 19-30 Aug answers a search for the 22nd-25th and
+ * one for the 15th-20th alike.
  */
 export function isAvailableBetween(
   place: Place,
   from?: string,
   to?: string,
+  tripType?: string,
 ): boolean {
   if (!from && !to) return true;
-  const windows = place.place_availability ?? [];
-  if (windows.length === 0) return false;
+
+  // Windows restricted to another trip type don't count towards this search.
+  const windows = (place.place_availability ?? []).filter(
+    (window) => !tripType || !window.trip_type || window.trip_type === tripType,
+  );
+  if (windows.length === 0) return true;
 
   const start = from || to!;
   const end = to || from!;
@@ -177,10 +189,13 @@ export function isAvailableBetween(
   );
 }
 
-/**
- * Free-text search over places. Matches the place name, its blurb, and the
- * region name, so "kenya", "safari" and "amboseli" all return sensible results.
- */
+/** True when a place has published windows relevant to this trip type. */
+export function hasPublishedDates(place: Place, tripType?: string) {
+  return (place.place_availability ?? []).some(
+    (window) => !tripType || !window.trip_type || window.trip_type === tripType,
+  );
+}
+
 export async function searchPlaces({
   where,
   type,
@@ -191,7 +206,7 @@ export async function searchPlaces({
   const term = where?.trim().toLowerCase();
 
   return all.filter((place) => {
-    if (!isAvailableBetween(place, from, to)) return false;
+    if (!isAvailableBetween(place, from, to, type)) return false;
     if (!term) return true;
     return [place.name, place.blurb ?? "", place.region]
       .join(" ")

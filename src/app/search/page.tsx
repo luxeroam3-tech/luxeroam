@@ -87,6 +87,13 @@ export default async function SearchPage({ searchParams }: PageProps) {
         )}
       </section>
 
+      {dateLabel && results.length > 0 && (
+        <p className="px-6 text-xs text-muted-foreground">
+          Destinations without published departure dates are included — we plan
+          those around the dates you want.
+        </p>
+      )}
+
       {results.length > 0 ? (
         <section className="grid grid-cols-1 gap-x-4 gap-y-8 px-6 py-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {results.map((place) => (
